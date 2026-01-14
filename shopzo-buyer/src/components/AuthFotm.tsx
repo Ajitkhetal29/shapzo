@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { apiRequest } from "@/lib/api";
 
 type AuthMode = "login" | "signup";
 
@@ -32,7 +33,7 @@ export default function AuthPage({
     };
 
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(""); // Clear previous errors
 
@@ -47,10 +48,41 @@ export default function AuthPage({
             }
             // Handle sign up logic here
             console.log("Sign Up:", formData);
+
+
+            try {
+
+                await apiRequest("api/auth/register", {
+                    method: "POST",
+                    body: JSON.stringify(formData),
+
+                })
+
+            } catch (error: any) {
+                setError(error.message || "Failed to create account. Please try again.");
+
+            }
+
         } else {
             // Handle sign in logic here
+
+
+            try {
+                await apiRequest("api/auth/login", {
+                    method: "POST",
+                    body: JSON.stringify(formData),
+                })
+            } catch (error: any) {
+                setError(error.message || "Failed to sign in. Please try again.");
+
+            }
+
+            window.location.href = "/";
+
             console.log("Sign In:", { email: formData.email, password: formData.password });
         }
+
+
     };
 
     return (
