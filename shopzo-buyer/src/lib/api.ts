@@ -4,7 +4,7 @@ export const apiRequest = async (
   url: string,
   options: RequestInit = {}
 ) => {
-  const response = await fetch(`${API_BASE_URL}${url}`, {
+  const response = await fetch(`${API_BASE_URL}/${url}`, {
     ...options,
     credentials: "include",
     headers: {

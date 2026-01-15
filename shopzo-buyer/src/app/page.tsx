@@ -10,10 +10,12 @@ export default function HomePage() {
   useEffect(() => {
     getCurrentUser()
       .then((data) => {
+        console.log("user",data);
+        
         setUser(data.user);
       })
       .catch(() => {
-        window.location.href = "/login";
+        // window.location.href = "/login";
       })
       .finally(() => setLoading(false));
   }, []);
@@ -22,9 +24,7 @@ export default function HomePage() {
 
   return (
     <main className="p-6">
-      <h1 className="text-2xl font-bold">
-        Welcome to Shopzo 👋
-      </h1>
+      <h1 className="text-2xl font-bold">Welcome to Shopzo 👋</h1>
       <p className="mt-2">Logged in as: {user.id}</p>
     </main>
   );
