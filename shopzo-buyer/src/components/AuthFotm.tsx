@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import axios from "axios";
+import { API_ENDPOINTS } from "@/lib/api";
 // import { apiRequest } from "@/lib/api";
 
 type AuthMode = "login" | "signup";
@@ -11,7 +12,7 @@ export default function AuthPage({
 }: {
   defaultMode?: AuthMode;
 }) {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(defaultMode === "signup");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
@@ -48,11 +49,14 @@ export default function AuthPage({
 
       try {
         const res = await axios.post(
-          "http://localhost:8000/api/auth/register",
+          `${API_ENDPOINTS.REGISTER}`,
           {
             name: formData.name,
             email: formData.email,
             password: formData.password,
+          },
+          {
+            withCredentials: true,
           }
         );
 
@@ -70,13 +74,18 @@ export default function AuthPage({
       // Handle sign in logic here
 
       try {
-        const res = await axios.post("http://localhost:8000/api/auth/login", {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-        });
+        const res = await axios.post(
+          `${API_ENDPOINTS.LOGIN}`,
+          {
+            email: formData.email,
+            password: formData.password,
+          },
+          {
+            withCredentials: true,
+          }
+        );
 
-        if (res.status === 201) {
+        if (res.status === 200) {
           console.log("res", res.data);
 
           window.location.href = "/";
@@ -84,8 +93,6 @@ export default function AuthPage({
       } catch (error: any) {
         setError(error.message || "Failed to sign in. Please try again.");
       }
-
-      window.location.href = "/";
 
       console.log("Sign In:", {
         email: formData.email,

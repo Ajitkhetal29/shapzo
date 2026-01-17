@@ -1,23 +1,13 @@
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "http://localhost:8000/api";
 
-export const apiRequest = async (
-  url: string,
-  options: RequestInit = {}
-) => {
-  const response = await fetch(`${API_BASE_URL}/${url}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-  });
+export const API_ENDPOINTS = {
+  /* AUTH */
+  REGISTER: `${API_BASE_URL}/auth/register`,
+  LOGIN: `${API_BASE_URL}/auth/login`,
+  LOGOUT: `${API_BASE_URL}/auth/logout`,
 
-  const data = await response.json();
+  /* USER */
+  CURRENT_USER: `${API_BASE_URL}/me`,
 
-  if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
-  }
-
-  return data;
+  
 };

@@ -15,7 +15,7 @@ export default function HomePage() {
         setUser(data.user);
       })
       .catch(() => {
-        // window.location.href = "/login";
+        window.location.href = "/login";
       })
       .finally(() => setLoading(false));
   }, []);
