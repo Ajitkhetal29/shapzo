@@ -29,7 +29,7 @@ const register = async (req, res) => {
       password: hashedPassword,
     });
 
-    const token = generateToken({ id: user._id, role: user.role });
+    const token = generateToken({ id: user._id, role: user.role, name });
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -84,7 +84,7 @@ const login = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: user._id, role: user.role });
+    const token = generateToken({ id: user._id, role: user.role , name: user.name});
 
     res.cookie("token", token, {
       httpOnly: true,
