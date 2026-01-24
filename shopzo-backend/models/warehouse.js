@@ -1,45 +1,68 @@
 import mongoose from "mongoose";
 
-const wareHouseSchema = new mongoose.Schema(
+const warehouseSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
       trim: true,
     },
+
+    // 📍 SOURCE OF TRUTH
     location: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    city: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    state: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    zipCode: {
-      type: String,
-      required: true,
-      trim: true,
-      validate: {
-        validator: function (v) {
-          return /^\d{5}(-\d{4})?$/.test(v);
-        },
-        message: "Invalid zip code format",
+      lat: {
+        type: Number,
+        required: true,
+      },
+      lng: {
+        type: Number,
+        required: true,
       },
     },
+
+    // 🏠 Derived address (can be auto-filled or edited)
+    address: {
+      formatted: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      state: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      city: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      pincode: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      landmark: {
+        type: String,
+        trim: true,
+      },
+    },
+
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
   },
   { timestamps: true }
 );
 
-const WareHouse = mongoose.model("WareHouse", wareHouseSchema);
-export default WareHouse;
+
+
+const Warehouse = mongoose.model("Warehouse", warehouseSchema);
+export default Warehouse;

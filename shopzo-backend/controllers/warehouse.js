@@ -1,33 +1,38 @@
-import WareHouse from "../models/warehouse.js";
+import Warehouse from "../models/warehouse.js";
 
-const createWareHouse = async (req, res) => {
+export const createWarehouse = async (req, res) => {
   try {
-    const { name, location, city, state, zipCode } = req.body;
+    const { name, location, address } = req.body;
 
-    if (!name || !location || !city || !state || !zipCode) {
+    if (
+      !name ||
+      !location?.lat ||
+      !location?.lng ||
+      !address?.formatted ||
+      !address?.state ||
+      !address?.city ||
+      !address?.pincode
+    ) {
       return res.status(400).json({
         success: false,
-        message: "All fields are required",
+        message: "Required warehouse data missing",
       });
     }
 
-    const newWareHouse = new WareHouse({
+    const warehouse = await Warehouse.create({
       name,
       location,
-      city,
-      state,
-      zipCode,
+      address,
+      createdBy: req.user.id, // from auth middleware
     });
-
-    await newWareHouse.save();
 
     return res.status(201).json({
       success: true,
-      message: "WareHouse created successfully",
-      warehouse: newWareHouse,
+      message: "Warehouse created successfully",
+      warehouse,
     });
   } catch (error) {
-    console.error("Create WareHouse error:", error);
+    console.error("Create warehouse error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -36,15 +41,17 @@ const createWareHouse = async (req, res) => {
 };
 
 
-const getWareHouses = async (req, res) => {
+export const getWarehouses = async (req, res) => {
   try {
-    const warehouses = await WareHouse.find();
+    const warehouses = await Warehouse.find({ isActive: true })
+      .sort({ createdAt: -1 });
+
     return res.status(200).json({
       success: true,
       warehouses,
     });
   } catch (error) {
-    console.error("Get WareHouses error:", error);
+    console.error("Get warehouses error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -53,6 +60,44 @@ const getWareHouses = async (req, res) => {
 };
 
 
+export const updateWarehouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, location, address, isActive } = req.body;
 
+    const warehouse = await Warehouse.findById(id);
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: "Warehouse not found",
+      });
+    }
 
-export { createWareHouse, getWareHouses };
+    if (name) warehouse.name = name;
+
+    if (location?.lat !== undefined && location?.lng !== undefined) {
+      warehouse.location = location;
+    }
+
+    if (address) warehouse.address = address;
+
+    if (typeof isActive === "boolean") {
+      warehouse.isActive = isActive;
+    }
+
+    await warehouse.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Warehouse updated successfully",
+      warehouse,
+    });
+  } catch (error) {
+    console.error("Update warehouse error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+

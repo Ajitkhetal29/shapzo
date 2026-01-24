@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
-import { error } from "console";
 
 type userType = {
   id: string;
@@ -14,11 +13,13 @@ type userType = {
 
 const Header = () => {
   const router = useRouter();
+  const pathname = usePathname();
   const [error, setError] = useState("");
 
   const [user, setUser] = useState<userType | null>(null);
 
   const getUser = async () => {
+    if (pathname === "/login") return;
     try {
       const res = await axios.get(`${API_ENDPOINTS.CURRENT_USER}`, {
         withCredentials: true,
@@ -53,7 +54,9 @@ const Header = () => {
 
   useEffect(() => {
     getUser();
-  }, []);
+  }, [pathname]);
+
+  if (pathname === "/login") return null;
 
   return (
     <header
