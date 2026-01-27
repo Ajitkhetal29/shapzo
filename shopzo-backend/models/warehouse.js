@@ -7,6 +7,11 @@ const warehouseSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    contactNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
     // 📍 SOURCE OF TRUTH
     location: {
