@@ -2,10 +2,12 @@ import Warehouse from "../models/warehouse.js";
 
 export const createWarehouse = async (req, res) => {
   try {
-    const { name, location, address } = req.body;
+    const { name, contactNumber, location, address } = req.body;
 
+    // Validate required fields
     if (
       !name ||
+      !contactNumber ||
       !location?.lat ||
       !location?.lng ||
       !address?.formatted ||
@@ -19,10 +21,21 @@ export const createWarehouse = async (req, res) => {
       });
     }
 
+    // Create warehouse with only schema fields (ignore extra fields like area, locality, country)
     const warehouse = await Warehouse.create({
       name,
-      location,
-      address,
+      contactNumber,
+      location: {
+        lat: location.lat,
+        lng: location.lng,
+      },
+      address: {
+        formatted: address.formatted,
+        state: address.state,
+        city: address.city,
+        pincode: address.pincode,
+        landmark: address.landmark || undefined,
+      },
       createdBy: req.user.id, // from auth middleware
     });
 
@@ -33,6 +46,13 @@ export const createWarehouse = async (req, res) => {
     });
   } catch (error) {
     console.error("Create warehouse error:", error);
+    // Handle mongoose validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Internal server error",

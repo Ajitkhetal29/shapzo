@@ -9,21 +9,27 @@ const warehousePage = () => {
   const [error, setError] = useState("");
 
   const fetchWarehouses = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(API_ENDPOINTS.GET_WAREHOUSES);
-
-      if (response.status === 200) {
+      const response = await axios.get(API_ENDPOINTS.GET_WAREHOUSES,{
+        withCredentials: true
+      });
+      console.log("Response:", response.data);
+      if (response.data.success) {
         setWarehouses(response.data.warehouses);
+      } else {
+        setError(response.data.message || "Failed to fetch warehouses");
       }
     } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to fetch warehouses");
-    } finally {
-      setLoading(false);
+      console.error("Error fetching warehouses:", error);
     }
+   finally {
+    setLoading(false);
+   }
   };
 
   useEffect(() => {
-    setLoading(true);
+    fetchWarehouses();
   }, []);
 
   return (
@@ -44,3 +50,5 @@ const warehousePage = () => {
     </div>
   );
 };
+
+export default warehousePage;

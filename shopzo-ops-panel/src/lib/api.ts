@@ -10,5 +10,5 @@ export const API_ENDPOINTS = {
   // warehouse
 
   CREATE_WAREHOUSES: `${API_BASE_URL}/warehouse/create`,
-  GET_WAREHOUSES: `${API_BASE_URL}/warehouses`,
+  GET_WAREHOUSES: `${API_BASE_URL}/warehouse/list`,
 };

@@ -7,6 +7,7 @@ import authRouter from "./routes/auth.js";
 import cookieParser from "cookie-parser";
 import authMiddleware from "./middleware/auth.js";
 import warehouseRouter from "./routes/warehouse.js";
+import reverseGeocodeRouter from "./routes/reversegeocode.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -22,6 +23,7 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/warehouse", warehouseRouter);
+app.use("/api/reversegeocode", reverseGeocodeRouter);
 // this route is for home page and set user
 
 app.get("/api/me", authMiddleware, (req, res) => {
