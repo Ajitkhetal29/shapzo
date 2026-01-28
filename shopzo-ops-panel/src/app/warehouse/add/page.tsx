@@ -1,9 +1,10 @@
 "use client";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
 import { toast } from "react-toastify";
+
 
 const MapBase = dynamic(() => import("@/app/components/MapBase"), {
   ssr: false,
@@ -11,6 +12,9 @@ const MapBase = dynamic(() => import("@/app/components/MapBase"), {
     Loading map...
   </div>
 });
+
+
+
 
 export default function AddWarehousePage() {
 
@@ -181,7 +185,7 @@ const getAddress = async (lat: number, lng: number) => {
                   name="name" 
                   value={formdata.name} 
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 text-black py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter warehouse name"
                 />
               </div>
@@ -199,7 +203,7 @@ const getAddress = async (lat: number, lng: number) => {
                   name="contactNumber" 
                   value={formdata.contactNumber} 
                   onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 text-black py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="10 digit mobile number"
                 />
               </div>
@@ -213,7 +217,7 @@ const getAddress = async (lat: number, lng: number) => {
                   name="landmark" 
                   value={address.landmark} 
                   onChange={handleAddressChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="e.g., Near Metro Station"
                 />
               </div>
