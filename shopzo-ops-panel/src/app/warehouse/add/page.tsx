@@ -34,6 +34,7 @@ export default function AddWarehousePage() {
     contactNumber: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
 
 
 
@@ -97,6 +98,7 @@ export default function AddWarehousePage() {
           area: "",
           country: "",
         });
+        setIsLoadingAddress(false);
       } else {
         toast.error(response.data.message || "Failed to add warehouse");
       }
@@ -111,6 +113,7 @@ export default function AddWarehousePage() {
   
 
 const getAddress = async (lat: number, lng: number) => {
+  setIsLoadingAddress(true);
   try {
     const response = await axios.get(`http://localhost:8000/api/reversegeocode/${lat}/${lng}`);
     const addressData = response.data.address;
@@ -132,51 +135,70 @@ const getAddress = async (lat: number, lng: number) => {
       state: addressData.state || "",
       city: city,
       pincode: addressData.postcode || "",
-      landmark: "", // User can fill this
+      landmark: address.landmark || "", // Preserve user input
       area: area,
       country: addressData.country || "",
     });
     console.log("Address:", response.data);
   } catch (error) {
     console.error("Error fetching address:", error);
+    toast.error("Failed to fetch address. Please try selecting the location again.");
+  } finally {
+    setIsLoadingAddress(false);
   }
 }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Add New Warehouse</h1>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-semibold text-gray-900">Add New Warehouse</h1>
+          <p className="mt-2 text-sm text-gray-600">Select a location on the map and fill in the warehouse details</p>
+        </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Map Section */}
-          <div className="bg-white rounded-lg shadow-md p-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Select Location</h2>
-            <div className="h-[500px] w-full rounded-lg overflow-hidden border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-lg font-medium text-gray-900">Select Location</h2>
+              <p className="text-sm text-gray-500 mt-1">Click on the map or search for an address</p>
+            </div>
+            <div className="h-[500px] w-full relative">
               <MapBase
                 onLocationSelect={(lat, lng) => {
-                  console.log("Selected:", lat, lng);
                   setLocation({ lat, lng });
                   getAddress(lat, lng);
                 }}
               />
             </div>
             {location && (  
-              <div className="mt-4 p-3 bg-blue-50 rounded-md">
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Selected:</span> {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+              <div className="px-6 py-3 bg-blue-50 border-t border-gray-200">
+                <p className="text-xs font-medium text-blue-900">
+                  Location Selected: <span className="text-blue-700">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span>
                 </p>
               </div>
             )}
           </div>
 
           {/* Form Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-6">Warehouse Details</h2>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 relative">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-lg font-medium text-gray-900">Warehouse Details</h2>
+            </div>
             
-            <div className="space-y-4">
-              {/* Editable Fields */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+            {isLoadingAddress && (
+              <div className="absolute inset-0 bg-white bg-opacity-95 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg">
+                <div className="text-center">
+                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                  <p className="text-base font-medium text-gray-900">Fetching address details...</p>
+                  <p className="text-sm text-gray-500 mt-2">Please wait while we load the address information</p>
+                </div>
+              </div>
+            )}
+            
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Warehouse Name <span className="text-red-500">*</span>
                 </label>
                 <input 
@@ -185,13 +207,13 @@ const getAddress = async (lat: number, lng: number) => {
                   name="name" 
                   value={formdata.name} 
                   onChange={handleChange}
-                  className="w-full px-4 text-black py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
                   placeholder="Enter warehouse name"
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="contactNumber" className="text-sm font-medium text-gray-700">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Contact Number <span className="text-red-500">*</span>
                 </label>
                 <input 
@@ -203,118 +225,152 @@ const getAddress = async (lat: number, lng: number) => {
                   name="contactNumber" 
                   value={formdata.contactNumber} 
                   onChange={handleChange}
-                  className="w-full px-4 text-black py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
                   placeholder="10 digit mobile number"
                 />
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="landmark" className="text-sm font-medium text-gray-700">
-                  Landmark
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Landmark</label>
                 <input 
                   type="text" 
                   name="landmark" 
                   value={address.landmark} 
                   onChange={handleAddressChange}
-                  className="w-full px-4 py-2 text-black border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isLoadingAddress}
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    isLoadingAddress 
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                      : "bg-white text-gray-900"
+                  }`}
                   placeholder="e.g., Near Metro Station"
                 />
               </div>
 
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                <h3 className="text-sm font-semibold text-gray-600 mb-4">Address Details (Auto-filled)</h3>
+              <div className="border-t border-gray-200 pt-5 mt-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">Address Details</h3>
+                    <p className="text-xs text-gray-500 mt-1">Auto-filled from selected location</p>
+                  </div>
+                  {isLoadingAddress && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-md border border-blue-200">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span className="text-xs font-medium text-blue-700">Fetching address...</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Auto-filled Address Fields */}
-              <div className="flex flex-col gap-2">
-                <label htmlFor="formatted" className="text-sm font-medium text-gray-700">
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Full Address <span className="text-red-500">*</span>
                 </label>
                 <textarea 
                   name="formatted" 
                   value={address.formatted} 
                   onChange={handleAddressChange}
-                  rows={2}
-                  disabled={true}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                  rows={3}
+                  disabled={isLoadingAddress}
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm resize-none ${
+                    isLoadingAddress 
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                      : "bg-white text-gray-900"
+                  }`}
+                  placeholder={isLoadingAddress ? "Fetching address..." : "Address will be auto-filled"}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="area" className="text-sm font-medium text-gray-700">
-                    Area/Neighbourhood
-                  </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Area/Neighbourhood</label>
                   <input 
                     type="text" 
                     name="area" 
-                    disabled={true} 
+                    disabled={isLoadingAddress} 
                     value={address.area} 
                     onChange={handleAddressChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                      isLoadingAddress 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                        : "bg-white text-gray-900"
+                    }`}
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="city" className="text-sm font-medium text-gray-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     City <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="text" 
                     name="city" 
-                    disabled={true} 
+                    disabled={isLoadingAddress} 
                     value={address.city} 
                     onChange={handleAddressChange} 
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                      isLoadingAddress 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                        : "bg-white text-gray-900"
+                    }`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="state" className="text-sm font-medium text-gray-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     State <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="text" 
                     name="state" 
-                    disabled={true} 
+                    disabled={isLoadingAddress} 
                     value={address.state} 
                     onChange={handleAddressChange} 
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                      isLoadingAddress 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                        : "bg-white text-gray-900"
+                    }`}
                   />
                 </div>
 
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="pincode" className="text-sm font-medium text-gray-700">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Pincode <span className="text-red-500">*</span>
                   </label>
                   <input 
                     type="text" 
                     name="pincode" 
-                    disabled={true} 
+                    disabled={isLoadingAddress} 
                     value={address.pincode} 
                     onChange={handleAddressChange} 
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                      isLoadingAddress 
+                        ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                        : "bg-white text-gray-900"
+                    }`}
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label htmlFor="country" className="text-sm font-medium text-gray-700">
-                  Country
-                </label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
                 <input 
                   type="text" 
                   name="country" 
-                  disabled={true} 
+                  disabled={isLoadingAddress} 
                   value={address.country} 
                   onChange={handleAddressChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    isLoadingAddress 
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
+                      : "bg-white text-gray-900"
+                  }`}
                 />
               </div>
 
@@ -322,23 +378,13 @@ const getAddress = async (lat: number, lng: number) => {
                 type="submit" 
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`w-full mt-6 px-6 py-3 rounded-md font-medium transition-colors ${
+                className={`w-full mt-6 px-6 py-3 rounded-md font-medium text-sm transition-all ${
                   isSubmitting 
                     ? "bg-gray-400 text-white cursor-not-allowed" 
-                    : "bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    : "bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
                 }`}
               >
-                {isSubmitting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Submitting...
-                  </span>
-                ) : (
-                  "Submit"
-                )}
+                {isSubmitting ? "Submitting..." : "Add Warehouse"}
               </button>
             </div>
           </div>

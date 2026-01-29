@@ -6,7 +6,7 @@ export const createWarehouse = async (req, res) => {
 
     // Validate required fields
     if (
-      !name ||
+      !name ||  
       !contactNumber ||
       !location?.lat ||
       !location?.lng ||

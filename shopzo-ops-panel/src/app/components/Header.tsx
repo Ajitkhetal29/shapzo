@@ -39,7 +39,9 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await axios.post(API_ENDPOINTS.LOGOUT);
+      const res = await axios.post(API_ENDPOINTS.LOGOUT, {}, {
+        withCredentials: true,
+      });
 
       if (res.status === 200) {
         router.push("/login");
