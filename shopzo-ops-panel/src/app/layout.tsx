@@ -5,6 +5,8 @@ import Header from "./components/Header";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Providers from "./provider";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +34,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header/>        {children}
+
+      <Providers>
+
+
+     
+        <Header />       
+         {children}
         <ToastContainer
           position="top-right"
           autoClose={3000}
@@ -45,6 +53,7 @@ export default function RootLayout({
           pauseOnHover
           theme="light"
         />
+         </Providers>
       </body>
     </html>
   );
