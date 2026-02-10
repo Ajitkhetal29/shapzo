@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 type userType = {
   id: string;
@@ -16,26 +18,15 @@ const Header = () => {
   const pathname = usePathname();
   const [error, setError] = useState("");
 
-  const [user, setUser] = useState<userType | null>(null);
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  const getUser = async () => {
-    if (pathname === "/login") return;
-    try {
-      const res = await axios.get(`${API_ENDPOINTS.CURRENT_USER}`, {
-        withCredentials: true,
-      });
-
-      if (res.status === 200) {
-        console.log(res.data);
-        setUser(res.data.user);
-      } else {
-        window.location.href = "/login";
-      }
-    } catch (error) {
-      window.location.href = "/login";
-      console.log(error);
+  useEffect(() => {
+    if (!user) {
+      router.push("/login");
     }
-  };
+  }, [user, router]);
+  
+
 
   const handleLogout = async () => {
     try {
@@ -54,9 +45,6 @@ const Header = () => {
     }
   };
 
-  useEffect(() => {
-    getUser();
-  }, [pathname]);
 
   if (pathname === "/login") return null;
 

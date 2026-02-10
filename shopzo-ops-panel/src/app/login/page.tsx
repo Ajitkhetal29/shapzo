@@ -1,10 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { API_ENDPOINTS } from "@/lib/api";
 import axios from "axios";
+import { API_ENDPOINTS } from "@/lib/api";
+import { useDispatch } from "react-redux";
+import { setUser } from "@/store/slices/authSlice";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -27,15 +33,23 @@ const LoginPage = () => {
 
     try {
       const res = await axios.post(API_ENDPOINTS.LOGIN, formData, {
-        withCredentials: true, // 👈 important for cookie auth
+        withCredentials: true,
       });
 
-      const role = res.data.user.role;
+      if (!res.data.success) {
+        setError(res.data.message || "Login failed");
+        return;
+      }
 
-      if (role === "admin") window.location.href = "/dashboards/admin";
-      else if (role === "delivery")
-        window.location.href = "/dashboards/delivery";
-      else if (role === "support") window.location.href = "/dashboards/support";
+      const user = res.data.user;
+
+      // ✅ Save user globally
+      dispatch(setUser(user));
+
+      // ✅ Role based navigation
+      if (user.role === "admin") router.push("/dashboards/admin");
+      else if (user.role === "delivery") router.push("/dashboards/delivery");
+      else if (user.role === "support") router.push("/dashboards/support");
       else setError("Invalid role. Contact admin.");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");

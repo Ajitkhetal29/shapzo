@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
 import { toast } from "react-toastify";
+import { useDispatch, UseDispatch } from "react-redux";
+import { addWarehouse } from "@/store/slices/warehouseSlice";
 
 
 const MapBase = dynamic(() => import("@/app/components/MapBase"), {
@@ -17,6 +19,8 @@ const MapBase = dynamic(() => import("@/app/components/MapBase"), {
 
 
 export default function AddWarehousePage() {
+
+  const dispatch = useDispatch();
 
   const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
   const [address, setAddress] = useState({
@@ -84,7 +88,9 @@ export default function AddWarehousePage() {
         withCredentials: true
       });
       console.log("Response:", response.data);
+
       if (response.data.success) {
+        dispatch(addWarehouse(response.data.warehouse));
         toast.success("Warehouse added successfully");
         // Reset form
         setFormdata({ name: "", contactNumber: "" });

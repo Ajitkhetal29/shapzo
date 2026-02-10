@@ -2,13 +2,39 @@
 import { API_ENDPOINTS } from "@/lib/api";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setWarehouses } from "@/store/slices/warehouseSlice";
+import { RootState } from "@/store";
+
+type Warehouse = {
+  _id: string;
+  contactNumber: string;
+  name: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+  address: {
+    formatted: string;
+    state: string;
+    city: string;
+    pincode: string;
+    landmark: string;
+  };
+  isActive: boolean;
+
+
+}
+
 
 const WarehousePage = () => {
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
-  const [warehouses, setWarehouses] = useState<Array<any>>([]);
   const [error, setError] = useState("");
+  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses) as unknown as Warehouse[];
 
   const fetchWarehouses = async () => {
+
     setLoading(true);
     setError("");
     try {
@@ -17,7 +43,7 @@ const WarehousePage = () => {
       });
       console.log("Response:", response.data);
       if (response.data.success) {
-        setWarehouses(response.data.warehouses);
+        dispatch(setWarehouses(response.data.warehouses))
       } else {
         setError(response.data.message || "Failed to fetch warehouses");
       }
@@ -81,7 +107,7 @@ const WarehousePage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                   Address
                 </th>
-               
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b">
                   Actions
                 </th>
@@ -99,7 +125,7 @@ const WarehousePage = () => {
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                     {warehouse.address?.formatted || "N/A"}
                   </td>
-                 
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button className="text-blue-600 hover:text-blue-900 mr-3">
                       Edit
@@ -109,7 +135,7 @@ const WarehousePage = () => {
                     </button>
                   </td>
                 </tr>
-              ))} 
+              ))}
             </tbody>
           </table>
         </div>
