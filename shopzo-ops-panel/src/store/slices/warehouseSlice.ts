@@ -1,23 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Warehouse } from "../types/warehouse";
 
-export type Warehouse = {
-  _id: string;
-  contactNumber: string;
-  name: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  address: {
-    formatted: string;
-    city: string;
-    state: string;
-    country?: string;
-    pincode: string;
-    landmark?: string;
-  };
-  isActive: boolean;
-};
+
 
 type WarehouseState = {
   warehouses: Warehouse[];
@@ -26,7 +10,6 @@ type WarehouseState = {
 const initialState: WarehouseState = {
   warehouses: [],
 };
-
 const warehouseSlice = createSlice({
   name: "warehouse",
   initialState,
@@ -36,6 +19,15 @@ const warehouseSlice = createSlice({
     },
     addWarehouse(state, action: PayloadAction<Warehouse>) {
       state.warehouses.unshift(action.payload);
+    },
+    updateWarehouse(state, action: PayloadAction<Warehouse>) {
+      const index = state.warehouses.findIndex((warehouse) => warehouse._id === action.payload._id);
+      if (index !== -1) {
+        state.warehouses[index] = action.payload;
+      }
+    },
+    deleteWarehouse(state, action: PayloadAction<string>) {
+      state.warehouses = state.warehouses.filter((warehouse) => warehouse._id !== action.payload);
     },
     clearWarehouses(state) {
       state.warehouses = [];

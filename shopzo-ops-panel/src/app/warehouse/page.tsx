@@ -5,33 +5,14 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setWarehouses } from "@/store/slices/warehouseSlice";
 import { RootState } from "@/store";
-
-type Warehouse = {
-  _id: string;
-  contactNumber: string;
-  name: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  address: {
-    formatted: string;
-    state: string;
-    city: string;
-    pincode: string;
-    landmark: string;
-  };
-  isActive: boolean;
-
-
-}
+import { Warehouse } from "@/store/types/warehouse";
 
 
 const WarehousePage = () => {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses) as unknown as Warehouse[];
+  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses) ;
 
   const fetchWarehouses = async () => {
 
@@ -120,20 +101,11 @@ const WarehousePage = () => {
                     {warehouse.name}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {warehouse.contactNumber}
+                    {warehouse.contactNumber || "N/A"}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                     {warehouse.address?.formatted || "N/A"}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-3">
-                      Edit
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      Delete
-                    </button>
-                  </td>
+                  </td> 
                 </tr>
               ))}
             </tbody>
