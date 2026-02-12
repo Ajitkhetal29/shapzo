@@ -6,7 +6,7 @@ export const createWarehouse = async (req, res) => {
 
     // Validate required fields
     if (
-      !name ||  
+      !name ||
       !contactNumber ||
       !location?.lat ||
       !location?.lng ||
@@ -56,16 +56,15 @@ export const createWarehouse = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      
     });
   }
 };
 
-
 export const getWarehouses = async (req, res) => {
   try {
-    const warehouses = await Warehouse.find({ isActive: true })
-      .sort({ createdAt: -1 });
+    const warehouses = await Warehouse.find({ isActive: true }).sort({
+      createdAt: -1,
+    });
 
     return res.status(200).json({
       success: true,
@@ -79,7 +78,6 @@ export const getWarehouses = async (req, res) => {
     });
   }
 };
-
 
 export const updateWarehouse = async (req, res) => {
   try {
@@ -122,3 +120,29 @@ export const updateWarehouse = async (req, res) => {
   }
 };
 
+export const deleteWarehouse = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const warehouse = await Warehouse.findById(id);
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: "Warehouse not found",
+      });
+    }
+
+    await warehouse.deleteOne(warehouse._id);
+
+    return res.status(200).json({
+      success: true,
+      message: "Warehouse deleted successfully",
+    });     
+
+  } catch (error) {
+    console.error("Delete warehouse error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};

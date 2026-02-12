@@ -18,7 +18,7 @@ const Header = () => {
   const pathname = usePathname();
   const [error, setError] = useState("");
 
-  const user = useSelector((state: RootState) => state.auth.user);
+  const user =  useSelector((state: RootState) => state.auth.user);
 
   useEffect(() => {
     if (!user) {

@@ -6,13 +6,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { setWarehouses } from "@/store/slices/warehouseSlice";
 import { RootState } from "@/store";
 import { Warehouse } from "@/store/types/warehouse";
+import { useRouter } from "next/navigation";
 
 
 const WarehousePage = () => {
   const dispatch = useDispatch();
+  const router = useRouter()
+    ;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses) ;
+  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses);
 
   const fetchWarehouses = async () => {
 
@@ -105,8 +108,12 @@ const WarehousePage = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs">
                     {warehouse.address?.formatted || "N/A"}
-                  </td> 
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <button onClick={() => router.push(`/warehouse/edit/${warehouse._id}`)} className="text-blue-600 hover:text-blue-900">Edit</button>
+                  </td>
                 </tr>
+
               ))}
             </tbody>
           </table>

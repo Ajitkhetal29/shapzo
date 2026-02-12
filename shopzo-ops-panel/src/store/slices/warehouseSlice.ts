@@ -35,7 +35,7 @@ const warehouseSlice = createSlice({
   },
 });
 
-export const { setWarehouses, addWarehouse, clearWarehouses } =
+export const { setWarehouses, addWarehouse, clearWarehouses, updateWarehouse, deleteWarehouse   } =
   warehouseSlice.actions;
 
 export default warehouseSlice.reducer;
