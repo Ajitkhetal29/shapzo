@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "@/store/slices/authSlice";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import { RootState } from "@/store";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
+  const pathname = usePathname();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const hasRedirected = useRef(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,6 +24,19 @@ const LoginPage = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
+
+  // Redirect if already authenticated (only on login page)
+  useEffect(() => {
+    // Double check we're actually on login page before redirecting
+    if (pathname !== "/login" || hasRedirected.current) return;
+    
+    if (user) {
+      hasRedirected.current = true;
+      if (user.role === "admin") router.push("/dashboards/admin");
+      else if (user.role === "delivery") router.push("/dashboards/delivery");
+      else if (user.role === "support") router.push("/dashboards/support");
+    }
+  }, [user, router, pathname]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

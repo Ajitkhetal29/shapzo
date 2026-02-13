@@ -8,9 +8,11 @@ export type Warehouse = {
   };
   address: {
     formatted: string;
-    city: string;
-    state: string;
-    pincode: string;
+    city?: string;
+    state?: string;
+    pincode?: string;
+    area?: string;
+    country?: string;
     landmark?: string;
   };
   isActive: boolean;

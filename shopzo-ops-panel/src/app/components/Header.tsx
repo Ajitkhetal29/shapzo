@@ -4,8 +4,9 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
+import { setUser, logout } from "@/store/slices/authSlice";
 
 type userType = {
   id: string;
@@ -17,14 +18,59 @@ const Header = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [error, setError] = useState("");
+  const dispatch = useDispatch();
 
-  const user =  useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [isVerifying, setIsVerifying] = useState(true);
 
+  // Verify auth on mount and restore user state
   useEffect(() => {
-    if (!user) {
-      router.push("/login");
+    // Skip if on login page
+    if (pathname === "/login") {
+      setIsVerifying(false);
+      return;
     }
-  }, [user, router]);
+
+    // If we already have user, skip verification
+    if (user) {
+      setIsVerifying(false);
+      return;
+    }
+
+    let isMounted = true;
+
+    const verifyAuth = async () => {
+      setIsVerifying(true);
+      try {
+        const res = await axios.get(API_ENDPOINTS.CURRENT_USER, {
+          withCredentials: true,
+        });
+        if (isMounted) {
+          if (res.data.success && res.data.user) {
+            dispatch(setUser(res.data.user));
+          } else {
+            // Not authenticated, redirect to login
+            router.push("/login");
+          }
+        }
+      } catch (err) {
+        // Not authenticated, redirect to login
+        if (isMounted) {
+          router.push("/login");
+        }
+      } finally {
+        if (isMounted) {
+          setIsVerifying(false);
+        }
+      }
+    };
+
+    verifyAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [dispatch, pathname, router, user]);
   
 
 
@@ -35,6 +81,7 @@ const Header = () => {
       });
 
       if (res.status === 200) {
+        dispatch(logout());
         router.push("/login");
       } else {
         console.log(res.data.message);

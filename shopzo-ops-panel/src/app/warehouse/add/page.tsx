@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
 import { toast } from "react-toastify";
-import { useDispatch, UseDispatch } from "react-redux";
-import {AppDispatch} from "@/store";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
 import { addWarehouse } from "@/store/slices/warehouseSlice";
+import { Address } from "@/store/types/address";
+import { getAddress } from "@/services/address";
+import { useRouter } from "next/navigation";
+
 
 
 const MapBase = dynamic(() => import("@/app/components/MapBase"), {
@@ -18,22 +22,12 @@ const MapBase = dynamic(() => import("@/app/components/MapBase"), {
 
 
 
-
 export default function AddWarehousePage() {
-
+  const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
   const [location, setLocation] = useState<{ lat: number, lng: number } | null>(null);
-  const [address, setAddress] = useState({
-    formatted: "",
-    state: "",
-    city: "",
-    pincode: "",
-    landmark: "",
-    // Additional fields for display only (not saved to DB)
-    area: "",
-    country: "",
-  });
+  const [address, setAddress] = useState<Address | null>(null);
   const [formdata, setFormdata] = useState({
     name: "",
     contactNumber: "",
@@ -49,7 +43,9 @@ export default function AddWarehousePage() {
   }
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setAddress({ ...address, [e.target.name]: e.target.value });
+    if (address) {
+      setAddress({ ...address, [e.target.name]: e.target.value } as Address);
+    }
   }
 
   const handleSubmit = async () => {
@@ -65,7 +61,7 @@ export default function AddWarehousePage() {
       toast.error("Please select a location on the map");
       return;
     }
-    if (!address.formatted || !address.state || !address.city || !address.pincode) {
+    if (!address || !address.formatted || !address.state || !address.city || !address.pincode) {
       toast.error("Please ensure address is properly loaded");
       return;
     }
@@ -81,7 +77,6 @@ export default function AddWarehousePage() {
           state: address.state,
           city: address.city,
           pincode: address.pincode,
-          landmark: address.landmark || undefined,
         }
       };
       console.log("Warehouse Data:", warehouseData);
@@ -101,11 +96,11 @@ export default function AddWarehousePage() {
           state: "",
           city: "",
           pincode: "",
-          landmark: "",
           area: "",
           country: "",
         });
         setIsLoadingAddress(false);
+        router.push("/warehouse");
       } else {
         toast.error(response.data.message || "Failed to add warehouse");
       }
@@ -117,43 +112,27 @@ export default function AddWarehousePage() {
     }
   }
 
-  
 
-const getAddress = async (lat: number, lng: number) => {
-  setIsLoadingAddress(true);
-  try {
-    const response = await axios.get(`http://localhost:8000/api/reversegeocode/${lat}/${lng}`);
-    const addressData = response.data.address;
-    
-    // Smart city extraction: prioritize actual city, fallback to district/suburb
-    // For Indian addresses: city could be in city_district, suburb, or city field
-    const city = addressData.city 
-      || addressData.city_district 
-      || addressData.suburb 
-      || addressData.state_district 
-      || "";
-    
-    // Area: neighbourhood or suburb for display only
-    const area = addressData.neighbourhood || addressData.suburb || "";
-    
-    // Map Nominatim response to warehouse schema structure
-    setAddress({
-      formatted: response.data.display_name || "",
-      state: addressData.state || "",
-      city: city,
-      pincode: addressData.postcode || "",
-      landmark: address.landmark || "", // Preserve user input
-      area: area,
-      country: addressData.country || "",
-    });
-    console.log("Address:", response.data);
-  } catch (error) {
-    console.error("Error fetching address:", error);
-    toast.error("Failed to fetch address. Please try selecting the location again.");
-  } finally {
-    setIsLoadingAddress(false);
-  }
-}
+
+  const handleGetAddress = async (lat: number, lng: number) => {
+    setIsLoadingAddress(true);
+    try {
+      const addressData = await getAddress({ lat, lng });
+      if (addressData) {
+        // Preserve existing landmark if user has entered one
+        setAddress({
+          ...addressData,
+        });
+      } else {
+        toast.error("Failed to fetch address. Please try selecting the location again.");
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      toast.error("Failed to fetch address. Please try selecting the location again.");
+    } finally {
+      setIsLoadingAddress(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -174,7 +153,7 @@ const getAddress = async (lat: number, lng: number) => {
               <MapBase
                 onLocationSelect={(lat, lng) => {
                   setLocation({ lat, lng });
-                  getAddress(lat, lng);
+                  handleGetAddress(lat, lng);
                 }}
               />
             </div>
@@ -242,7 +221,6 @@ const getAddress = async (lat: number, lng: number) => {
                 <input 
                   type="text" 
                   name="landmark" 
-                  value={address.landmark} 
                   onChange={handleAddressChange}
                   disabled={isLoadingAddress}
                   className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
@@ -275,7 +253,7 @@ const getAddress = async (lat: number, lng: number) => {
                 </label>
                 <textarea 
                   name="formatted" 
-                  value={address.formatted} 
+                  value={address?.formatted || ""} 
                   onChange={handleAddressChange}
                   rows={3}
                   disabled={isLoadingAddress}
@@ -295,7 +273,7 @@ const getAddress = async (lat: number, lng: number) => {
                     type="text" 
                     name="area" 
                     disabled={isLoadingAddress} 
-                    value={address.area} 
+                    value={address?.area || ""} 
                     onChange={handleAddressChange}
                     className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
                       isLoadingAddress 
@@ -313,7 +291,7 @@ const getAddress = async (lat: number, lng: number) => {
                     type="text" 
                     name="city" 
                     disabled={isLoadingAddress} 
-                    value={address.city} 
+                    value={address?.city || ""} 
                     onChange={handleAddressChange} 
                     required
                     className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
@@ -334,7 +312,7 @@ const getAddress = async (lat: number, lng: number) => {
                     type="text" 
                     name="state" 
                     disabled={isLoadingAddress} 
-                    value={address.state} 
+                    value={address?.state || ""} 
                     onChange={handleAddressChange} 
                     required
                     className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
@@ -353,7 +331,7 @@ const getAddress = async (lat: number, lng: number) => {
                     type="text" 
                     name="pincode" 
                     disabled={isLoadingAddress} 
-                    value={address.pincode} 
+                    value={address?.pincode || ""} 
                     onChange={handleAddressChange} 
                     required
                     className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
@@ -371,7 +349,7 @@ const getAddress = async (lat: number, lng: number) => {
                   type="text" 
                   name="country" 
                   disabled={isLoadingAddress} 
-                  value={address.country} 
+                  value={address?.country || ""} 
                   onChange={handleAddressChange}
                   className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
                     isLoadingAddress 
