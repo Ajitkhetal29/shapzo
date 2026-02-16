@@ -4,6 +4,9 @@ type User = {
   id: string;
   name: string;
   email: string;
+  department: string;
+  isActive: boolean;
+  createdAt: Date;
   role: string;
 };
 

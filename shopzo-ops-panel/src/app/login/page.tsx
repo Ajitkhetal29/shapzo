@@ -32,9 +32,10 @@ const LoginPage = () => {
     
     if (user) {
       hasRedirected.current = true;
-      if (user.role === "admin") router.push("/dashboards/admin");
-      else if (user.role === "delivery") router.push("/dashboards/delivery");
-      else if (user.role === "support") router.push("/dashboards/support");
+      if (user.department === "admin") router.push("/dashboards/admin");
+      else if (user.department === "delivery") router.push("/dashboards/delivery");
+      else if (user.department === "support") router.push("/dashboards/support");
+      else if (user.department === "vendor") router.push("/dashboards/vendor");
     }
   }, [user, router, pathname]);
 
@@ -64,10 +65,11 @@ const LoginPage = () => {
       dispatch(setUser(user));
 
       // ✅ Role based navigation
-      if (user.role === "admin") router.push("/dashboards/admin");
-      else if (user.role === "delivery") router.push("/dashboards/delivery");
-      else if (user.role === "support") router.push("/dashboards/support");
-      else setError("Invalid role. Contact admin.");
+      if (user.department === "admin") router.push("/dashboards/admin");
+      else if (user.department === "delivery") router.push("/dashboards/delivery");
+      else if (user.department === "support") router.push("/dashboards/support");
+      else if (user.department === "vendor") router.push("/dashboards/vendor");
+      else setError("Invalid department. Contact admin.");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");
     } finally {

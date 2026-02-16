@@ -50,6 +50,7 @@ export default function RootLayout({
           pauseOnHover
           theme="light"
         />
+        
          </Providers>
       </body>
     </html>

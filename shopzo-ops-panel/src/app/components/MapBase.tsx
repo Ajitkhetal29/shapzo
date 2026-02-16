@@ -213,10 +213,11 @@ function FlyToLocation({ position }: { position: [number, number] }) {
 
 type Props = {
   onLocationSelect: (lat: number, lng: number) => void;
+  defaultPosition?: [number, number];
 };
 
-export default function MapPicker({ onLocationSelect }: Props) {
-  const [position, setPosition] = useState<[number, number] | null>(null);
+export default function MapPicker({ onLocationSelect, defaultPosition }: Props) {
+  const [position, setPosition] = useState<[number, number] | null>(defaultPosition || null);
   const [userPosition, setUserPosition] = useState<[number, number] | null>(
     null
   );
@@ -286,7 +287,7 @@ export default function MapPicker({ onLocationSelect }: Props) {
         {loading ? "Loading..." : "📍 Use my location"}
       </button>
       <MapContainer
-        center={userPosition || position || [20.5937, 78.9629]}
+        center={userPosition || position || defaultPosition || [20.5937, 78.9629]}
         zoom={userPosition || position ? 15 : 5}
         className="h-full w-full"
         style={{ borderRadius: '0.375rem' }}

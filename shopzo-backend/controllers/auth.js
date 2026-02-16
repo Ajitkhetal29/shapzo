@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import { generateToken } from "../utils/jwt.js";
 
 const register = async (req, res) => {
@@ -41,12 +41,7 @@ const register = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "User created successfully",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -96,12 +91,7 @@ const login = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user,
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -133,4 +123,88 @@ const logout = async (req, res) => {
   }
 };
 
-export { register, login, logout };
+
+const createOpsUser = async (req, res) => {
+  try {
+    const { name, email, password, department, role } = req.body;
+    if (!name || !email || !password || !department || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: "User already exists",
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, password: hashedPassword, department, role });
+    return res.status(201).json({
+      success: true,
+      message: "User created successfully",
+      user
+    });
+  } catch (error) {
+    console.error("Create ops user error:", error);
+    return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+
+  const getOpsUsers = async (req, res) => {
+    try {
+      const users = await User.find({ department: { $ne: "buyer" } });
+      return res.status(200).json({
+        success: true,
+        message: "Users fetched successfully",
+        users
+      });
+    } catch (error) {
+      console.error("Get ops users error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  const updateOpsUser = async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, email, department, role } = req.body;
+      const user = await User.findByIdAndUpdate(id, { name, email, department, role }, { new: true });
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        user
+      });
+    } catch (error) {
+      console.error("Update ops user error:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  const deleteOpsUser = async (req, res) => {
+    try {
+      const { id } = req.params;
+      await User.findByIdAndDelete(id);
+      return res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+      });
+    } catch (error) {
+      console.error("Delete ops user error:", error);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  };
+
+export { register, login, logout, createOpsUser, getOpsUsers, updateOpsUser, deleteOpsUser };

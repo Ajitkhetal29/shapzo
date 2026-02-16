@@ -193,7 +193,7 @@ export default function AddWarehousePage() {
                   name="name" 
                   value={formdata.name} 
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
                   placeholder="Enter warehouse name"
                 />
               </div>
@@ -211,7 +211,7 @@ export default function AddWarehousePage() {
                   name="contactNumber" 
                   value={formdata.contactNumber} 
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
                   placeholder="10 digit mobile number"
                 />
               </div>
@@ -223,7 +223,7 @@ export default function AddWarehousePage() {
                   name="landmark" 
                   onChange={handleAddressChange}
                   disabled={isLoadingAddress}
-                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                     isLoadingAddress 
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                       : "bg-white text-gray-900"
@@ -275,7 +275,7 @@ export default function AddWarehousePage() {
                     disabled={isLoadingAddress} 
                     value={address?.area || ""} 
                     onChange={handleAddressChange}
-                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                       isLoadingAddress 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                         : "bg-white text-gray-900"
@@ -294,7 +294,7 @@ export default function AddWarehousePage() {
                     value={address?.city || ""} 
                     onChange={handleAddressChange} 
                     required
-                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                       isLoadingAddress 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                         : "bg-white text-gray-900"
@@ -315,7 +315,7 @@ export default function AddWarehousePage() {
                     value={address?.state || ""} 
                     onChange={handleAddressChange} 
                     required
-                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                       isLoadingAddress 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                         : "bg-white text-gray-900"
@@ -334,7 +334,7 @@ export default function AddWarehousePage() {
                     value={address?.pincode || ""} 
                     onChange={handleAddressChange} 
                     required
-                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                    className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                       isLoadingAddress 
                         ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                         : "bg-white text-gray-900"
@@ -351,7 +351,7 @@ export default function AddWarehousePage() {
                   disabled={isLoadingAddress} 
                   value={address?.country || ""} 
                   onChange={handleAddressChange}
-                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                     isLoadingAddress 
                       ? "bg-gray-100 text-gray-400 cursor-not-allowed" 
                       : "bg-white text-gray-900"
@@ -363,10 +363,10 @@ export default function AddWarehousePage() {
                 type="submit" 
                 onClick={handleSubmit}
                 disabled={isSubmitting}
-                className={`w-full mt-6 px-6 py-3 rounded-md font-medium text-sm transition-all ${
+                className={`w-full mt-6 px-6 py-3 rounded-lg font-medium text-sm transition-all ${
                   isSubmitting 
-                    ? "bg-gray-400 text-white cursor-not-allowed" 
-                    : "bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 shadow-sm"
                 }`}
               >
                 {isSubmitting ? "Submitting..." : "Add Warehouse"}

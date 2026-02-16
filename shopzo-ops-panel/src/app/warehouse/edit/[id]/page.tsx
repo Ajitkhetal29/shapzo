@@ -167,8 +167,11 @@ const EditWarehousePage = ({ }) => {
                             <p className="text-sm text-gray-500 mt-1">Click on the map or search for an address</p>
                         </div>
                         <div className="h-[500px] w-full relative">
-                            <MapBase onLocationSelect={(lat, lng) => {
+                            <MapBase
+                            defaultPosition={location ? [location.lat, location.lng] : undefined}
+                             onLocationSelect={(lat, lng) => {
                                 setLocation({ lat, lng });
+
                                 handleGetAddress(lat, lng);
                             }} />
                         </div>
@@ -219,7 +222,7 @@ const EditWarehousePage = ({ }) => {
                                         name="name"
                                         value={formData?.name || ''}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
                                         placeholder="Enter warehouse name"
                                         required
                                     />
@@ -238,7 +241,7 @@ const EditWarehousePage = ({ }) => {
                                         maxLength={10}
                                         minLength={10}
                                         pattern="[0-9]*"
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm"
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
                                         placeholder="10 digit mobile number"
                                         required
                                     />
@@ -253,7 +256,7 @@ const EditWarehousePage = ({ }) => {
                                         value={formData?.address?.landmark || ''}
                                         onChange={handleInputChange}
                                         disabled={isLoadingAddress}
-                                        className={`w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm ${
+                                        className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm ${
                                             isLoadingAddress
                                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                                 : "bg-white text-gray-900"
@@ -286,7 +289,7 @@ const EditWarehousePage = ({ }) => {
                                         value={address?.formatted || ''}
                                         rows={3}
                                         disabled
-                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm resize-none bg-gray-100 text-gray-600 cursor-not-allowed"
+                                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm resize-none bg-gray-100 text-gray-600 cursor-not-allowed"
                                         placeholder="Address will be auto-filled"
                                     />
                                 </div>
@@ -299,7 +302,7 @@ const EditWarehousePage = ({ }) => {
                                             name="area"
                                             disabled
                                             value={address?.area || ''}
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                                         />
                                     </div>
 
@@ -313,7 +316,7 @@ const EditWarehousePage = ({ }) => {
                                             disabled
                                             value={address?.city || ''}
                                             required
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -329,7 +332,7 @@ const EditWarehousePage = ({ }) => {
                                             disabled
                                             value={address?.state || ''}
                                             required
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                                         />
                                     </div>
 
@@ -343,7 +346,7 @@ const EditWarehousePage = ({ }) => {
                                             disabled
                                             value={address?.pincode || ''}
                                             required
-                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                                            className="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -363,17 +366,17 @@ const EditWarehousePage = ({ }) => {
                                     <button
                                         type="button"
                                         onClick={() => router.push('/warehouse')}
-                                        className="px-6 py-3 rounded-md font-medium text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                        className="px-6 py-3 rounded-lg font-medium text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                                     >
                                         Cancel
                                     </button>
                                     <button
                                         type="submit"
                                         disabled={loading || isLoadingAddress}
-                                        className={`flex-1 px-6 py-3 rounded-md font-medium text-sm transition-all ${
+                                        className={`flex-1 px-6 py-3 rounded-lg font-medium text-sm transition-all ${
                                             loading || isLoadingAddress
                                                 ? "bg-gray-400 text-white cursor-not-allowed"
-                                                : "bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm"
+                                                : "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 shadow-sm"
                                         }`}
                                     >
                                         {loading ? "Updating..." : "Update Warehouse"}

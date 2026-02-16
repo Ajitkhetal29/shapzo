@@ -21,10 +21,16 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    role: {
+    department: {
       type: String,
       enum: ["buyer", "admin", "vendor", "support", "delivery"],
       default: "buyer",
+    },
+
+    role: {
+      type: String,
+      enum: ["superadmin", "manager", "team_leader", "team_member"],
+      
     },
 
     isActive: {
