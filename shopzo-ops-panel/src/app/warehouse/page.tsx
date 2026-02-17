@@ -3,20 +3,22 @@ import { API_ENDPOINTS } from "@/lib/api";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setWarehouses } from "@/store/slices/warehouseSlice";
+import { deleteWarehouse, setWarehouses } from "@/store/slices/warehouseSlice";
 import { RootState } from "@/store";
 import { Warehouse } from "@/store/types/warehouse";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "react-toastify";
 
 
 const WarehousePage = () => {
   const dispatch = useDispatch();
-  const router = useRouter()
-    ;
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const warehouses = useSelector((state: RootState) => state.warehouse.warehouses);
+  const [deletModalOpen, setDeletModalOpen] = useState(false);
+  const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
 
   const fetchWarehouses = async () => {
 
@@ -39,6 +41,24 @@ const WarehousePage = () => {
       setLoading(false);
     }
   };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await axios.delete(`${API_ENDPOINTS.DELETE_WAREHOUSES}/${id}`, {
+        withCredentials: true,
+      });
+      if (response.data.success) {
+        dispatch(deleteWarehouse(id));
+        toast.success("Warehouse deleted successfully");
+      } else {
+        toast.error(response.data.message || "Failed to delete warehouse");
+      }
+    } catch (error: any) {
+      console.error("Error deleting warehouse:", error);
+      toast.error(error.response?.data?.message || "Failed to delete warehouse");
+    }
+  };
+
 
   useEffect(() => {
     fetchWarehouses();
@@ -81,6 +101,35 @@ const WarehousePage = () => {
             Add Warehouse
           </Link>
         </div>
+
+
+        {/* delete  modal */}
+        {deletModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">Delete Warehouse</h2>
+              <p className="text-gray-600 mb-6">Are you sure you want to delete this warehouse? This action cannot be undone.</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeletModalOpen(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    handleDelete(selectedWarehouseId as string);
+                    setDeletModalOpen(false);
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
 
         {/* Warehouses Table */}
         {warehouses.length === 0 ? (
@@ -144,11 +193,20 @@ const WarehousePage = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button 
-                          onClick={() => router.push(`/warehouse/edit/${warehouse._id}`)} 
+                        <button
+                          onClick={() => router.push(`/warehouse/edit/${warehouse._id}`)}
                           className="text-black hover:text-gray-700 font-medium transition-colors"
                         >
                           Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedWarehouseId(warehouse._id);
+                            setDeletModalOpen(true);
+                          }}
+                          className="ml-4 text-red-600 hover:text-red-800 font-medium transition-colors"
+                        >
+                          Delete
                         </button>
                       </td>
                     </tr>

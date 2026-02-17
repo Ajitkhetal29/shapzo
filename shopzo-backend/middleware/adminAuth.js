@@ -9,7 +9,7 @@ const adminAuth = (req, res, next) => {
         return res.status(401).json({ success: false, message: "Unauthorized" });
       }
         const decoded = verifyToken(token);
-        if (!decoded || decoded.role !== "admin") {
+        if (!decoded || decoded.role !== "superadmin") {
             return res.status(403).json({ success: false, message: "Forbidden: Admins only" });
         }
         req.user = decoded; 
