@@ -21,7 +21,6 @@ const WarehousePage = () => {
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string | null>(null);
 
   const fetchWarehouses = async () => {
-
     setLoading(true);
     setError("");
     try {
@@ -61,7 +60,10 @@ const WarehousePage = () => {
 
 
   useEffect(() => {
-    fetchWarehouses();
+    // Only fetch if warehouses are not in Redux
+    if (!warehouses || warehouses.length === 0) {
+      fetchWarehouses();
+    }
   }, []);
 
   if (loading) {

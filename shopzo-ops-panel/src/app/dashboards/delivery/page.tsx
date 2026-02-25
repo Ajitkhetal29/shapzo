@@ -2,13 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const deliveryDashboardPage = () => {
+  const users = useSelector((state: RootState) => state.user.users);
+  const deliveryTeamMembers = users.filter(user => user.department === "delivery");
+
   const stats = [
     { name: "Active Deliveries", value: "0", icon: "🚚", color: "bg-blue-500" },
     { name: "Pending Orders", value: "0", icon: "⏳", color: "bg-yellow-500" },
     { name: "Completed Today", value: "0", icon: "✅", color: "bg-green-500" },
-    { name: "Team Members", value: "0", icon: "👥", color: "bg-purple-500" },
+    { name: "Team Members", value: deliveryTeamMembers.length.toString(), icon: "👥", color: "bg-purple-500" },
   ];
 
   const quickActions = [

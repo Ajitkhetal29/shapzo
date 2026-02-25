@@ -50,10 +50,12 @@ const UserPage = () => {
 
 
     useEffect(() => {
+        // Only fetch if users are not in Redux
         if (!users || users.length === 0) {
             fetchUsers();
         }
-    }, [users]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     if (isLoading) {
         return (

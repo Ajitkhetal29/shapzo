@@ -2,11 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const AdminDashboardPage = () => {
+  const users = useSelector((state: RootState) => state.user.users);
+  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses);
+
   const stats = [
-    { name: "Total Users", value: "0", icon: "👥", href: "/users", color: "bg-blue-500" },
-    { name: "Warehouses", value: "0", icon: "🏭", href: "/warehouse", color: "bg-green-500" },
+    { name: "Total Users", value: users.length.toString(), icon: "👥", href: "/users", color: "bg-blue-500" },
+    { name: "Warehouses", value: warehouses.length.toString(), icon: "🏭", href: "/warehouse", color: "bg-green-500" },
     { name: "Orders", value: "0", icon: "📦", href: "/orders", color: "bg-purple-500" },
     { name: "Products", value: "0", icon: "🛍️", href: "/products", color: "bg-orange-500" },
   ];

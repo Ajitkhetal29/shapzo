@@ -2,13 +2,18 @@
 
 import React from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const vendorDashboardPage = () => {
+  const users = useSelector((state: RootState) => state.user.users);
+  const vendorTeamMembers = users.filter(user => user.department === "vendor");
+
   const stats = [
     { name: "Total Products", value: "0", icon: "🛍️", color: "bg-blue-500" },
     { name: "Active Orders", value: "0", icon: "📦", color: "bg-yellow-500" },
     { name: "Revenue Today", value: "₹0", icon: "💰", color: "bg-green-500" },
-    { name: "Team Members", value: "0", icon: "👥", color: "bg-purple-500" },
+    { name: "Team Members", value: vendorTeamMembers.length.toString(), icon: "👥", color: "bg-purple-500" },
   ];
 
   const quickActions = [

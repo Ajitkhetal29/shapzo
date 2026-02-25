@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { API_ENDPOINTS } from '@/lib/api';
 import axios from 'axios';
-import { updateWarehouse } from '@/store/slices/warehouseSlice';
+import { updateWarehouse, setWarehouses } from '@/store/slices/warehouseSlice';
 import { Warehouse } from '@/store/types/warehouse';
 import { getAddress } from '@/services/address';
 import { useRouter } from 'next/navigation';
@@ -34,11 +34,9 @@ const EditWarehousePage = ({ }) => {
     const [isLoadingAddress, setIsLoadingAddress] = useState(false);
 
 
-    const warehouse = useSelector((state: RootState) =>
-        state.warehouse.warehouses.find(w => w._id === id)
-    );
-
-
+    const warehouses = useSelector((state: RootState) => state.warehouse.warehouses);
+    const warehouse = warehouses.find(w => w._id === id);
+    const hasFetched = useRef(false);
 
     const [formData, setFormData] = useState<Warehouse | null>(null);
 
@@ -49,8 +47,36 @@ const EditWarehousePage = ({ }) => {
             setAddress(warehouse.address as Address);
             // Fetch fresh address data for the warehouse location
             handleGetAddress(warehouse.location.lat, warehouse.location.lng);
+        } else if (id && !hasFetched.current && (!warehouses || warehouses.length === 0)) {
+            // If warehouse not in Redux and warehouses array is empty, fetch all warehouses
+            hasFetched.current = true;
+            setLoading(true);
+            axios.get(API_ENDPOINTS.GET_WAREHOUSES, {
+                withCredentials: true,
+            })
+            .then((response) => {
+                if (response.data.success && response.data.warehouses) {
+                    dispatch(setWarehouses(response.data.warehouses));
+                    const foundWarehouse = response.data.warehouses.find((w: Warehouse) => w._id === id);
+                    if (foundWarehouse) {
+                        setLocation({ lat: foundWarehouse.location.lat, lng: foundWarehouse.location.lng });
+                        setFormData(foundWarehouse);
+                        setAddress(foundWarehouse.address as Address);
+                        handleGetAddress(foundWarehouse.location.lat, foundWarehouse.location.lng);
+                    } else {
+                        setError("Warehouse not found");
+                    }
+                }
+            })
+            .catch((err: any) => {
+                const errorMessage = err.response?.data?.message || "Failed to fetch warehouse";
+                setError(errorMessage);
+            })
+            .finally(() => {
+                setLoading(false);
+            });
         }
-    }, [warehouse]);
+    }, [warehouse, id, warehouses, dispatch]);
 
     const handleGetAddress = async (lat: number, lng: number) => {
         setIsLoadingAddress(true);

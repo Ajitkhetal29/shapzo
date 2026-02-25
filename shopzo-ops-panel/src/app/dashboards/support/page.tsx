@@ -1,13 +1,18 @@
 "use client";
 import React from "react";
 import Link from "next/link";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const supportDashboardPage = () => {
+  const users = useSelector((state: RootState) => state.user.users);
+  const supportTeamMembers = users.filter(user => user.department === "support");
+
   const stats = [
     { name: "Open Tickets", value: "0", icon: "🎫", color: "bg-red-500" },
     { name: "In Progress", value: "0", icon: "🔄", color: "bg-yellow-500" },
     { name: "Resolved Today", value: "0", icon: "✅", color: "bg-green-500" },
-    { name: "Team Members", value: "0", icon: "👥", color: "bg-blue-500" },
+    { name: "Team Members", value: supportTeamMembers.length.toString(), icon: "👥", color: "bg-blue-500" },
   ];
 
   const quickActions = [
