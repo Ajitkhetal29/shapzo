@@ -3,7 +3,9 @@ import { store } from "@/store";
 import { setUser } from "@/store/slices/authSlice";
 import { setWarehouses } from "@/store/slices/warehouseSlice";
 import { setUsers } from "@/store/slices/userSlice";
+import { setVendors } from "@/store/slices/vendorSlice";
 import { API_ENDPOINTS } from "@/lib/api";
+import { setDepartments, setRoles } from "@/store/slices/genralSlice";
 
 export interface AppInitResult {
   success: boolean;
@@ -71,6 +73,51 @@ export const initializeApp = async (): Promise<AppInitResult> => {
       );
     }
 
+    // Fetch vendors if not in Redux
+    if (!state.vendor.vendors || state.vendor.vendors.length === 0) {
+      promises.push(
+        axios
+          .get(API_ENDPOINTS.GET_VENDORS, { withCredentials: true })
+          .then((res) => {
+            if (res.data.success && res.data.vendors) {
+              dispatch(setVendors(res.data.vendors));
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching vendors:", err);
+          })
+      );
+    }
+
+    // general
+    if (!state.general.departments || state.general.departments.length === 0) {
+      promises.push(
+        axios
+          .get(API_ENDPOINTS.GET_DEPARTMENTS, { withCredentials: true })
+          .then((res) => {
+            if (res.data.success && res.data.departments) {
+              dispatch(setDepartments(res.data.departments));
+            }
+          })
+      );
+    }
+
+    if (!state.general.roles || state.general.roles.length === 0) {
+      promises.push(
+        axios
+          .get(API_ENDPOINTS.GET_ROLES, { withCredentials: true })
+          .then((res) => {
+            if (res.data.success && res.data.roles) {
+              dispatch(setRoles(res.data.roles));
+            }
+          })
+          .catch((err) => {
+            console.error("Error fetching roles:", err);
+          })
+      );
+    }
+
+  
     // Wait for all fetches to complete
     await Promise.allSettled(promises);
 

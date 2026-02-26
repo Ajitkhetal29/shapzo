@@ -26,10 +26,10 @@ export default function AppInitializer({ children }: { children: React.ReactNode
   // Show loading only on first mount (not on login page)
   if (!isInitialized && pathname !== "/login") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 transition-colors">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
-          <p className="text-base font-medium text-gray-900">Loading...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-black dark:border-white mb-4"></div>
+          <p className="text-base font-medium text-gray-900 dark:text-white">Loading...</p>
         </div>
       </div>
     );

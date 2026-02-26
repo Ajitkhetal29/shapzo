@@ -4,6 +4,19 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { useState, useEffect, useRef } from "react";
 import { User } from "@/store/types/users";
+
+type Department = {
+    _id: string;
+    name: string;
+    code?: string;
+};
+
+type Role = {
+    _id: string;
+    name: string;
+    department: string | Department;
+    code?: string;
+};
 import { updateUser, setUsers } from "@/store/slices/userSlice";
 
 import axios from "axios";
@@ -18,17 +31,82 @@ const EditUserPage = () => {
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [formData, setFormData] = useState<User | null>(null);
-
+    const [formData, setFormData] = useState<{
+        name?: string;
+        email?: string;
+        department?: string;
+        role?: string;
+        [key: string]: any;
+    } | null>(null);
+    const [departments, setDepartments] = useState<Department[]>([]);
+    const [roles, setRoles] = useState<Role[]>([]);
+    const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
 
     const users = useSelector((state: RootState) => state.user.users);
     const fetchedUser = users.find((user: any) => user._id === id);
     const hasFetched = useRef(false);
 
+    // Fetch departments and roles
+    useEffect(() => {
+        const fetchDepartmentsAndRoles = async () => {
+            try {
+                const [deptResponse, roleResponse] = await Promise.all([
+                    axios.get(API_ENDPOINTS.GET_DEPARTMENTS, { withCredentials: true }),
+                    axios.get(API_ENDPOINTS.GET_ROLES, { withCredentials: true })
+                ]);
+
+                if (deptResponse.data.success) {
+                    // Exclude buyer department
+                    const depts = deptResponse.data.departments.filter((dept: Department) => 
+                        dept.name?.toLowerCase() !== 'buyer'
+                    );
+                    setDepartments(depts);
+                }
+
+                if (roleResponse.data.success) {
+                    setRoles(roleResponse.data.roles);
+                }
+            } catch (err) {
+                console.error("Error fetching departments/roles:", err);
+            }
+        };
+
+        fetchDepartmentsAndRoles();
+    }, []);
+
+    // Filter roles based on selected department
+    useEffect(() => {
+        if (formData?.department && roles.length > 0) {
+            const deptId = formData.department as string;
+            
+            const filtered = roles.filter((role: Role) => {
+                const roleDeptId = typeof role.department === 'object' 
+                    ? (role.department as Department)._id 
+                    : role.department;
+                return roleDeptId === deptId;
+            });
+            setFilteredRoles(filtered);
+        } else {
+            setFilteredRoles([]);
+        }
+    }, [formData?.department, roles]);
+
     useEffect(() => {
         if (fetchedUser) {
             setUser(fetchedUser);
-            setFormData(fetchedUser);
+            // Extract IDs from populated objects
+            const deptId = typeof fetchedUser.department === 'object' 
+                ? fetchedUser.department._id 
+                : fetchedUser.department;
+            const roleId = typeof fetchedUser.role === 'object' 
+                ? fetchedUser.role._id 
+                : fetchedUser.role;
+            
+            setFormData({
+                ...fetchedUser,
+                department: deptId,
+                role: roleId,
+            });
         } else if (id && !hasFetched.current) {
             // If user not in Redux, fetch all users (only once)
             hasFetched.current = true;
@@ -42,7 +120,19 @@ const EditUserPage = () => {
                     const user = response.data.users.find((u: User) => u._id === id);
                     if (user) {
                         setUser(user);
-                        setFormData(user);
+                        // Extract IDs from populated objects
+                        const deptId = typeof user.department === 'object' 
+                            ? user.department._id 
+                            : user.department;
+                        const roleId = typeof user.role === 'object' 
+                            ? user.role._id 
+                            : user.role;
+                        
+                        setFormData({
+                            ...user,
+                            department: deptId,
+                            role: roleId,
+                        });
                     } else {
                         setError("User not found");
                     }
@@ -88,7 +178,14 @@ const EditUserPage = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         if (formData) {
-            setFormData({ ...formData, [e.target.name]: e.target.value });
+            const newFormData = { ...formData, [e.target.name]: e.target.value };
+            
+            // If department changed, reset role and filter roles
+            if (e.target.name === 'department') {
+                newFormData.role = '';
+            }
+            
+            setFormData(newFormData);
         }
     }
 
@@ -118,28 +215,28 @@ const EditUserPage = () => {
 
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8 transition-colors">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-semibold text-gray-900">Edit User</h1>
-                    <p className="mt-2 text-sm text-gray-600">Update user information and permissions</p>
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Edit User</h1>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Update user information and permissions</p>
                 </div>
 
                 {error && (
-                    <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                        <p className="text-sm text-red-600">{error}</p>
+                    <div className="mx-6 mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                     </div>
                 )}
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h2 className="text-lg font-medium text-gray-900">User Details</h2>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-white">User Details</h2>
                     </div>
 
                     <form onSubmit={handleSubmit}>
                         <div className="p-6 space-y-5">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Name <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -148,14 +245,14 @@ const EditUserPage = () => {
                                     name="name"
                                     value={formData?.name || ''}
                                     onChange={handleInputChange}
-                                    className="w-full text-gray-900 px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
+                                    className="w-full text-gray-900 dark:text-white bg-white dark:bg-slate-700 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm"
                                     placeholder="Enter user name"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Email <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -164,14 +261,14 @@ const EditUserPage = () => {
                                     name="email"
                                     value={formData?.email || ''}
                                     onChange={handleInputChange}
-                                    className="w-full text-gray-900 px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm"
+                                    className="w-full text-gray-900 dark:text-white bg-white dark:bg-slate-700 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm"
                                     placeholder="Enter email address"
                                     required
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Department <span className="text-red-500">*</span>
                                 </label>
                                 <select
@@ -179,19 +276,20 @@ const EditUserPage = () => {
                                     name="department"
                                     value={formData?.department || ''}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white"
+                                    className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm"
                                     required
                                 >
                                     <option value="">Select department</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="support">Support</option>
-                                    <option value="delivery">Delivery</option>
-                                    <option value="vendor">Vendor</option>
+                                    {departments.map((dept) => (
+                                        <option key={dept._id} value={dept._id}>
+                                            {dept.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     Role <span className="text-red-500">*</span>
                                 </label>
                                 <select
@@ -199,14 +297,18 @@ const EditUserPage = () => {
                                     name="role"
                                     value={formData?.role || ''}
                                     onChange={handleInputChange}
-                                    className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white"
+                                    className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm disabled:opacity-50"
                                     required
+                                    disabled={!formData?.department}
                                 >
-                                    <option value="">Select role</option>
-                                    <option value="superadmin">Superadmin</option>
-                                    <option value="manager">Manager</option>
-                                    <option value="team_leader">Team Leader</option>
-                                    <option value="team_member">Team Member</option>
+                                    <option value="">
+                                        {formData?.department ? 'Select role' : 'Select department first'}
+                                    </option>
+                                    {filteredRoles.map((role) => (
+                                        <option key={role._id} value={role._id}>
+                                            {role.name}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -214,7 +316,7 @@ const EditUserPage = () => {
                                 <button
                                     type="button"
                                     onClick={() => router.push('/users')}
-                                    className="px-6 py-3 rounded-lg font-medium text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                    className="px-6 py-3 rounded-lg font-medium text-sm transition-all bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-500 focus:ring-offset-2"
                                 >
                                     Cancel
                                 </button>
@@ -223,7 +325,7 @@ const EditUserPage = () => {
                                     disabled={isLoading}
                                     className={`flex-1 px-6 py-3 rounded-lg font-medium text-sm transition-all ${isLoading
                                             ? "bg-gray-400 text-white cursor-not-allowed"
-                                            : "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 shadow-sm"
+                                            : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 shadow-sm"
                                         }`}
                                 >
                                     {isLoading ? "Updating..." : "Update User"}

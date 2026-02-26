@@ -202,11 +202,27 @@ function FlyToLocation({ position }: { position: [number, number] }) {
   const map = useMap();
 
   useEffect(() => {
-    map.flyTo(position, 15, {
-      animate: true,
-      duration: 1.5,
-    });
+    if (position) {
+      map.flyTo(position, 15, {
+        animate: true,
+        duration: 1.5,
+      });
+    }
   }, [position, map]);
+
+  return null;
+}
+
+function SetMapCenter({ center }: { center: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (center) {
+      map.setView(center, 15, {
+        animate: false,
+      });
+    }
+  }, [center, map]);
 
   return null;
 }
@@ -225,6 +241,16 @@ export default function MapPicker({ onLocationSelect, defaultPosition }: Props) 
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearchResults, setHasSearchResults] = useState(false);
   const [showNoResults, setShowNoResults] = useState(false);
+
+  // Update position when defaultPosition changes (e.g., when edit page loads data)
+  useEffect(() => {
+    if (defaultPosition) {
+      const [lat, lng] = defaultPosition;
+      if (!position || position[0] !== lat || position[1] !== lng) {
+        setPosition([lat, lng]);
+      }
+    }
+  }, [defaultPosition, position]);
 
   const handleUseMyLocation = () => {
     setLoading(true);
@@ -288,7 +314,7 @@ export default function MapPicker({ onLocationSelect, defaultPosition }: Props) 
       </button>
       <MapContainer
         center={userPosition || position || defaultPosition || [20.5937, 78.9629]}
-        zoom={userPosition || position ? 15 : 5}
+        zoom={userPosition || position || defaultPosition ? 15 : 5}
         className="h-full w-full"
         style={{ borderRadius: '0.375rem' }}
       >
@@ -327,6 +353,13 @@ export default function MapPicker({ onLocationSelect, defaultPosition }: Props) 
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+
+        {defaultPosition && !position && (
+          <>
+            <SetMapCenter center={defaultPosition} />
+            <Marker position={defaultPosition} />
+          </>
+        )}
 
         <ClickHandler
           onPick={(lat, lng) => {

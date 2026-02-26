@@ -1,13 +1,26 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+type Department = {
+  _id: string;
+  name: string;
+  code?: string;
+};
+
+type Role = {
+  _id: string;
+  name: string;
+  code?: string;
+};
+
 type User = {
-  id: string;
+  _id: string;
+  id?: string; // For backward compatibility
   name: string;
   email: string;
-  department: string;
+  department: Department | string; // Can be object or string for backward compatibility
+  role: Role | string; // Can be object or string for backward compatibility
   isActive: boolean;
   createdAt: Date;
-  role: string;
 };
 
 type AuthState = {
@@ -25,7 +38,12 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     setUser(state, action: PayloadAction<User>) {
-      state.user = action.payload;
+      // Normalize user object - ensure _id is set and id exists for backward compatibility
+      const user = action.payload;
+      if (user._id && !user.id) {
+        user.id = user._id;
+      }
+      state.user = user;
       state.isAuthenticated = true;
     },
     logout(state) {

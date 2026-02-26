@@ -8,15 +8,29 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { setUser, logout } from "@/store/slices/authSlice";
 import Link from "next/link";
+import { useTheme } from "@/contexts/ThemeContext";
 
-type userType = {
-  id: string;
-  name: string;
-  email: string;
-  department: string;
-  role: string;
-  isActive: boolean;
-  createdAt: Date;
+// Helper function to get department code/name (handles both string and object)
+const getDepartmentCode = (department: any): string => {
+  if (!department) return "";
+  if (typeof department === "string") return department.toLowerCase();
+  if (department.code) return department.code.toLowerCase();
+  if (department.name) return department.name.toLowerCase();
+  return "";
+};
+
+// Helper function to get department name for display
+const getDepartmentName = (department: any): string => {
+  if (!department) return "";
+  if (typeof department === "string") return department;
+  return department.name || department.code || "";
+};
+
+// Helper function to get role name for display
+const getRoleName = (role: any): string => {
+  if (!role) return "";
+  if (typeof role === "string") return role;
+  return role.name || role.code || "";
 };
 
 const Header = () => {
@@ -24,19 +38,21 @@ const Header = () => {
   const pathname = usePathname();
   const [error, setError] = useState("");
   const dispatch = useDispatch();
+  const { theme, toggleTheme } = useTheme();
 
   const user = useSelector((state: RootState) => state.auth.user);
   const [isVerifying, setIsVerifying] = useState(true);
 
-  const handleMenuItems = (department: string): { label: string, href: string }[] => {
-    switch (department) {
+  const handleMenuItems = (departmentCode: string): { label: string, href: string }[] => {
+    switch (departmentCode) {
       case "admin":
         return [
           { label: "Dashboard", href: "/dashboards/admin" },
           { label: "Users", href: "/users" },
           {label: "Warehouses", href: "/warehouse" },
-          {label: "Support", href: "/support" },
           {label: "Vendor", href: "/vendor" },
+          {label: "General", href: "/genral" },
+          {label: "Support", href: "/support" },
           {label: "Products", href: "/products" },
           {label: "Orders", href: "/orders" },
           
@@ -69,7 +85,8 @@ const Header = () => {
   };
 
   // Compute menu items directly from user
-  const menuItems = user?.department ? handleMenuItems(user.department) : [];
+  const departmentCode = user?.department ? getDepartmentCode(user.department) : "";
+  const menuItems = departmentCode ? handleMenuItems(departmentCode) : [];
 
   // Verify auth on mount and restore user state
   useEffect(() => {
@@ -84,10 +101,11 @@ const Header = () => {
     if (user) {
       setIsVerifying(false);
       if (pathname === "/") {
-        if (user.department === "admin") router.push("/dashboards/admin");
-        else if (user.department === "delivery") router.push("/dashboards/delivery");
-        else if (user.department === "support") router.push("/dashboards/support");
-        else if (user.department === "vendor") router.push("/dashboards/vendor");
+        const deptCode = getDepartmentCode(user.department);
+        if (deptCode === "admin") router.push("/dashboards/admin");
+        else if (deptCode === "delivery") router.push("/dashboards/delivery");
+        else if (deptCode === "support") router.push("/dashboards/support");
+        else if (deptCode === "vendor") router.push("/dashboards/vendor");
       }
       return;
     }
@@ -107,10 +125,11 @@ const Header = () => {
             
             // If on root page, redirect to dashboard based on role
             if (pathname === "/") {
-              if (verifiedUser.department === "admin") router.push("/dashboards/admin");
-              else if (verifiedUser.department === "delivery") router.push("/dashboards/delivery");
-              else if (verifiedUser.department === "support") router.push("/dashboards/support");
-              else if (verifiedUser.department === "vendor") router.push("/dashboards/vendor");
+              const deptCode = getDepartmentCode(verifiedUser.department);
+              if (deptCode === "admin") router.push("/dashboards/admin");
+              else if (deptCode === "delivery") router.push("/dashboards/delivery");
+              else if (deptCode === "support") router.push("/dashboards/support");
+              else if (deptCode === "vendor") router.push("/dashboards/vendor");
             }
           } else {
             // Not authenticated, redirect to login
@@ -163,11 +182,11 @@ const Header = () => {
 
   if (isVerifying) {
     return (
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <div className="h-6 w-32 bg-gray-200 animate-pulse rounded"></div>
+              <div className="h-6 w-32 bg-gray-200 dark:bg-slate-700 animate-pulse rounded"></div>
             </div>
           </div>
         </div>
@@ -176,12 +195,12 @@ const Header = () => {
   }
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+    <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 shadow-sm sticky top-0 z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Brand */}
           <div className="flex items-center">
-            <Link href={user?.department ? `/dashboards/${user.department}` : "/"} className="text-xl font-bold text-black">
+            <Link href={departmentCode ? `/dashboards/${departmentCode}` : "/"} className="text-xl font-bold text-black dark:text-white">
               Shopzo Ops Panel
             </Link>
           </div>
@@ -196,8 +215,8 @@ const Header = () => {
                   key={item.label}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-black text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-black dark:bg-white text-white dark:text-black"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   {item.label}
@@ -211,11 +230,13 @@ const Header = () => {
             {user && (
               <div className="hidden sm:flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{user.name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{user.department} • {user.role}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                    {getDepartmentName(user.department)} • {getRoleName(user.role)}
+                  </p>
                 </div>
-                <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">
+                <div className="h-8 w-8 rounded-full bg-black dark:bg-white flex items-center justify-center">
+                  <span className="text-white dark:text-black text-sm font-semibold">
                     {user.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
@@ -223,19 +244,36 @@ const Header = () => {
             )}
             
             {error && (
-              <span className="text-sm text-red-600">{error}</span>
+              <span className="text-sm text-red-600 dark:text-red-400">{error}</span>
             )}
+            
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
             
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-black hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               Logout
             </button>
 
             {/* Mobile Menu Button */}
             <div className="md:hidden">
-              <button className="p-2 rounded-lg text-gray-700 hover:bg-gray-100">
+              <button className="p-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -245,7 +283,7 @@ const Header = () => {
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden border-t border-gray-200 py-2">
+        <div className="md:hidden border-t border-gray-200 dark:border-slate-700 py-2">
           <nav className="flex flex-wrap gap-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.href;
@@ -255,8 +293,8 @@ const Header = () => {
                   key={item.label}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? "bg-black text-white"
-                      : "text-gray-700 hover:bg-gray-100"
+                      ? "bg-black dark:bg-white text-white dark:text-black"
+                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   }`}
                 >
                   {item.label}

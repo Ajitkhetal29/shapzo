@@ -52,27 +52,27 @@ const AddUserPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8 transition-colors">
             <div className="max-w-3xl mx-auto">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-semibold text-gray-900">Add User</h1>
-                    <p className="mt-2 text-sm text-gray-600">Create a new staff account with department and role permissions</p>
+                    <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Add User</h1>
+                    <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Create a new staff account with department and role permissions</p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <p className="text-sm text-red-600">{error}</p>
+                    <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
                     </div>
                 )}
 
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                        <h2 className="text-lg font-medium text-gray-900">User Details</h2>
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                    <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700">
+                        <h2 className="text-lg font-medium text-gray-900 dark:text-white">User Details</h2>
                     </div>
 
                     <form onSubmit={handleSubmit} className="p-6 space-y-5">
                         <div>
-                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Name <span className="text-red-500">*</span>
                             </label>
                             <input 
@@ -81,14 +81,14 @@ const AddUserPage = () => {
                                 name="name" 
                                 value={formData?.name || ''} 
                                 onChange={handleInputChange} 
-                                className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white" 
+                                className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 placeholder="Enter full name"
                                 required 
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Email <span className="text-red-500">*</span>
                             </label>
                             <input 
@@ -97,14 +97,14 @@ const AddUserPage = () => {
                                 name="email" 
                                 value={formData?.email || ''} 
                                 onChange={handleInputChange} 
-                                className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white" 
+                                className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 placeholder="user@example.com"
                                 required 
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Password <span className="text-red-500">*</span>
                             </label>
                             <input 
@@ -113,14 +113,14 @@ const AddUserPage = () => {
                                 name="password" 
                                 value={formData?.password || ''} 
                                 onChange={handleInputChange} 
-                                className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white" 
+                                className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 placeholder="Enter password"
                                 required 
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="department" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Department <span className="text-red-500">*</span>
                             </label>
                             <select 
@@ -128,7 +128,7 @@ const AddUserPage = () => {
                                 name="department" 
                                 value={formData?.department || ''} 
                                 onChange={handleInputChange} 
-                                className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white" 
+                                className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 required
                             >
                                 <option value="">Select department</option>
@@ -140,7 +140,7 @@ const AddUserPage = () => {
                         </div>
 
                         <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Role <span className="text-red-500">*</span>
                             </label>
                             <select 
@@ -148,7 +148,7 @@ const AddUserPage = () => {
                                 name="role" 
                                 value={formData?.role || ''} 
                                 onChange={handleInputChange} 
-                                className="w-full px-4 py-2.5 text-gray-900 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-colors text-sm bg-white" 
+                                className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 required
                             >
                                 <option value="">Select role</option>
@@ -163,7 +163,7 @@ const AddUserPage = () => {
                             <button
                                 type="button"
                                 onClick={() => router.push('/users')}
-                                className="px-6 py-3 rounded-lg font-medium text-sm transition-all bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                                className="px-6 py-3 rounded-lg font-medium text-sm transition-all bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-500 focus:ring-offset-2"
                             >
                                 Cancel
                             </button>
@@ -173,7 +173,7 @@ const AddUserPage = () => {
                                 className={`flex-1 px-6 py-3 rounded-lg font-medium text-sm transition-all ${
                                     isLoading
                                         ? "bg-gray-400 text-white cursor-not-allowed"
-                                        : "bg-black text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 shadow-sm"
+                                        : "bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:ring-offset-2 shadow-sm"
                                 }`}
                             >
                                 {isLoading ? "Adding..." : "Add User"}

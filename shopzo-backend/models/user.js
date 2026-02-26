@@ -7,7 +7,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     email: {
       type: String,
       required: true,
@@ -15,24 +14,20 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-
     password: {
       type: String,
       required: true,
     },
-
     department: {
-      type: String,
-      enum: ["buyer", "admin", "vendor", "support", "delivery"],
-      default: "buyer",
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Department",
+      required: true,
     },
-
     role: {
-      type: String,
-      enum: ["superadmin", "manager", "team_leader", "team_member"],
-      
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Role",
+      required: true,
     },
-
     isActive: {
       type: Boolean,
       default: true,

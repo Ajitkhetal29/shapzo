@@ -7,8 +7,15 @@ import authRouter from "./routes/auth.js";
 import cookieParser from "cookie-parser";
 import authMiddleware from "./middleware/auth.js";
 import warehouseRouter from "./routes/warehouse.js";
+import userRouter from "./routes/user.js";
+import vendorRouter from "./routes/vendor.js";
+import departmentRouter from "./routes/department.js";
+import roleRouter from "./routes/role.js";
+import userReportingRouter from "./routes/userReporting.js";
+import permissionRouter from "./routes/permission.js";
 import reverseGeocodeRouter from "./routes/reversegeocode.js";
 import User from "./models/user.js";
+import { createDepartment, createRole, createUser } from "./scripts/test.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -24,12 +31,22 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRouter);
 app.use("/api/warehouse", warehouseRouter);
+app.use("/api/user", userRouter);
+app.use("/api/vendor", vendorRouter);
+app.use("/api/department", departmentRouter);
+app.use("/api/role", roleRouter);
+app.use("/api/user-reporting", userReportingRouter);
+app.use("/api/permission", permissionRouter);
 app.use("/api/reversegeocode", reverseGeocodeRouter);
 // this route is for home page and set user
 
 app.get("/api/me", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id)
+      .select("-password")
+      .populate("department", "name code")
+      .populate("role", "name code");
+    
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
@@ -58,3 +75,7 @@ connectDB()
     console.log(err);
     process.exit(1);
   });
+
+// createDepartment("Admin", "Admin Department");
+// createRole("Super Admin", "699ffbf35de05a3e86120ffc");
+// createUser("Super Admin", "superadmin@shopzo.com", "1234", "699ffbf35de05a3e86120ffc", "699ffdfffbee3a74c7309a99");

@@ -58,6 +58,23 @@ const warehouseSchema = new mongoose.Schema(
       default: true,
     },
 
+    members: [{
+      user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required: true,
+      },
+      role: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Role",
+        required: true,
+      },
+      updatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    }],
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

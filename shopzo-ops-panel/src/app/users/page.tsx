@@ -59,32 +59,32 @@ const UserPage = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-lg text-gray-600">Loading...</div>
+            <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900">
+                <div className="text-lg text-gray-600 dark:text-gray-400">Loading...</div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="text-red-600">{error}</div>
+            <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-slate-900">
+                <div className="text-red-600 dark:text-red-400">{error}</div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4 sm:px-6 lg:px-8 transition-colors">
             <div className="max-w-7xl mx-auto">
                 {/* Header Section */}
                 <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-semibold text-gray-900">Users</h1>
-                        <p className="mt-1 text-sm text-gray-600">Manage staff accounts and permissions</p>
+                        <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Users</h1>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage staff accounts and permissions</p>
                     </div>
                     <Link 
                         href="/users/add" 
-                        className="inline-flex items-center justify-center px-4 py-2 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors shadow-sm"
+                        className="inline-flex items-center justify-center px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm"
                     >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -96,13 +96,13 @@ const UserPage = () => {
                 {/* Delete Modal */}
                 {deletModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">Delete User</h2>
-                            <p className="text-gray-600 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-slate-700">
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Delete User</h2>
+                            <p className="text-gray-600 dark:text-gray-400 mb-6">Are you sure you want to delete this user? This action cannot be undone.</p>
                             <div className="flex gap-3 justify-end">
                                 <button
                                     onClick={() => setDeletModalOpen(false)}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                                    className="px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors font-medium"
                                 >
                                     Cancel
                                 </button>
@@ -121,52 +121,54 @@ const UserPage = () => {
                 )}
 
                 {/* Users Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
+                            <thead className="bg-gray-50 dark:bg-slate-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Email</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Department</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Role</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Email</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Department</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                                 {users.length === 0 ? (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                                            No users found. <Link href="/users/add" className="text-black font-medium hover:underline">Add your first user</Link>
+                                        <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                            No users found. <Link href="/users/add" className="text-black dark:text-white font-medium hover:underline">Add your first user</Link>
                                         </td>
                                     </tr>
                                 ) : (
                                     users.map((user) => (
-                                        <tr key={user._id} className="hover:bg-gray-50 transition-colors">
+                                        <tr key={user._id} className="hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="h-8 w-8 rounded-full bg-black flex items-center justify-center mr-3">
-                                                        <span className="text-white text-sm font-semibold">
+                                                    <div className="h-8 w-8 rounded-full bg-black dark:bg-white flex items-center justify-center mr-3">
+                                                        <span className="text-white dark:text-black text-sm font-semibold">
                                                             {user.name.charAt(0).toUpperCase()}
                                                         </span>
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-900">{user.name}</span>
+                                                    <span className="text-sm font-medium text-gray-900 dark:text-white">{user.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 capitalize">
-                                                    {user.department}
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 capitalize">
+                                                    {typeof user.department === 'string' ? user.department : user.department?.name || user.department?.code || 'N/A'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="text-sm text-gray-600 capitalize">{user.role.replace('_', ' ')}</span>
+                                                <span className="text-sm text-gray-600 dark:text-gray-400 capitalize">
+                                                    {typeof user.role === 'string' ? user.role.replace('_', ' ') : user.role?.name || user.role?.code || 'N/A'}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
                                                 <div className="flex gap-3">
                                                     <Link
                                                         href={`/users/edit/${user._id}`}
-                                                        className="text-black hover:text-gray-700 font-medium transition-colors"
+                                                        className="text-black dark:text-white hover:text-gray-700 dark:hover:text-gray-300 font-medium transition-colors"
                                                     >
                                                         Edit
                                                     </Link>
@@ -175,7 +177,7 @@ const UserPage = () => {
                                                             setDeletModalOpen(true);
                                                             setSelectedUserId(user._id);
                                                         }}
-                                                        className="text-red-600 hover:text-red-700 font-medium transition-colors"
+                                                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
                                                     >
                                                         Delete
                                                     </button>

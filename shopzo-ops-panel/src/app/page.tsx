@@ -19,16 +19,26 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Helper function to get department code
+  const getDepartmentCode = (department: any): string => {
+    if (!department) return "";
+    if (typeof department === "string") return department.toLowerCase();
+    if (department.code) return department.code.toLowerCase();
+    if (department.name) return department.name.toLowerCase();
+    return "";
+  };
+
   useEffect(() => {
     // Wait for auth check to complete
     if (!hasChecked) return;
 
-    // If user is logged in, redirect to their dashboard based on role
+    // If user is logged in, redirect to their dashboard based on department
     if (user) {
-      if (user.role === "admin") router.push("/dashboards/admin");
-      else if (user.role === "delivery") router.push("/dashboards/delivery");
-      else if (user.role === "support") router.push("/dashboards/support");
-      else if (user.role === "vendor") router.push("/dashboards/vendor");
+      const deptCode = getDepartmentCode(user.department);
+      if (deptCode === "admin") router.push("/dashboards/admin");
+      else if (deptCode === "delivery") router.push("/dashboards/delivery");
+      else if (deptCode === "support") router.push("/dashboards/support");
+      else if (deptCode === "vendor") router.push("/dashboards/vendor");
     } else {
       // If not logged in, redirect to login
       router.push("/login");
