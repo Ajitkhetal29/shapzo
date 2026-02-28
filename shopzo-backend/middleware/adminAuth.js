@@ -80,7 +80,23 @@ const adminAuth = async (req, res, next) => {
       
       next();
     } catch (error) {
-      console.error("Admin auth error:", error);
+      console.error("Admin auth error:", error.message || error);
+      
+      // Handle specific JWT errors
+      if (error.message?.includes("JWT_SECRET is not configured")) {
+        return res.status(500).json({ 
+          success: false, 
+          message: "Server configuration error" 
+        });
+      }
+      
+      if (error.message?.includes("invalid signature")) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Session expired. Please log in again." 
+        });
+      }
+      
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 };

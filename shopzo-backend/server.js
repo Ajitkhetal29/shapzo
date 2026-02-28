@@ -1,5 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
+
+// Validate required environment variables
+if (!process.env.JWT_SECRET) {
+  console.error("❌ ERROR: JWT_SECRET is not set in environment variables!");
+  console.error("Please add JWT_SECRET to your .env file");
+  process.exit(1);
+}
+
 import express, { application } from "express";
 import connectDB from "./config/db.js";
 import cors from "cors";

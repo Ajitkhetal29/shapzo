@@ -17,6 +17,21 @@ const authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
+    // Handle specific JWT errors
+    if (error.message?.includes("JWT_SECRET is not configured")) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server configuration error" 
+      });
+    }
+    
+    if (error.message?.includes("invalid signature")) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Session expired. Please log in again." 
+      });
+    }
+    
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }
 };
