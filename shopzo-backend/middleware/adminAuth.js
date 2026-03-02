@@ -3,13 +3,13 @@ import User from "../models/user.js";
 import Department from "../models/department.js";
 import Role from "../models/role.js";
 
-// Cache admin department and super admin role IDs
+// Cache admin department and admin role IDs
 let adminDepartmentId = null;
-let superAdminRoleId = null;
+let adminRoleId = null;
 
 const getAdminIds = async () => {
-  if (adminDepartmentId && superAdminRoleId) {
-    return { adminDepartmentId, superAdminRoleId };
+  if (adminDepartmentId && adminRoleId) {
+    return { adminDepartmentId, adminRoleId };
   }
 
   // Find Admin department
@@ -18,19 +18,19 @@ const getAdminIds = async () => {
     throw new Error("Admin department not found");
   }
 
-  // Find Super Admin role in Admin department
-  const superAdminRole = await Role.findOne({ 
-    name: { $regex: /^super\s*admin$/i },
+  // Find Admin role in Admin department
+  const adminRole = await Role.findOne({ 
+    name: { $regex: /^admin$/i },
     department: adminDept._id 
   });
-  if (!superAdminRole) {
-    throw new Error("Super Admin role not found");
+  if (!adminRole) {
+    throw new Error("Admin role not found in admin department");
   }
 
   adminDepartmentId = adminDept._id;
-  superAdminRoleId = superAdminRole._id;
+  adminRoleId = adminRole._id;
 
-  return { adminDepartmentId, superAdminRoleId };
+  return { adminDepartmentId, adminRoleId };
 };
 
 const adminAuth = async (req, res, next) => {
@@ -48,7 +48,7 @@ const adminAuth = async (req, res, next) => {
       }
 
       // Get admin IDs
-      const { adminDepartmentId, superAdminRoleId } = await getAdminIds();
+      const { adminDepartmentId, adminRoleId } = await getAdminIds();
 
       // Fetch user
       const user = await User.findById(decoded.id);
@@ -57,11 +57,11 @@ const adminAuth = async (req, res, next) => {
         return res.status(401).json({ success: false, message: "User not found or inactive" });
       }
 
-      // Check if user's department and role IDs match admin department and super admin role
+      // Check if user's department and role IDs match admin department and admin role
       const isAdminDept = user.department?.toString() === adminDepartmentId.toString();
-      const isSuperAdminRole = user.role?.toString() === superAdminRoleId.toString();
+      const isAdminRole = user.role?.toString() === adminRoleId.toString();
       
-      if (!isAdminDept || !isSuperAdminRole) {
+      if (!isAdminDept || !isAdminRole) {
         return res.status(403).json({ success: false, message: "Forbidden: Admins only" });
       }
 
@@ -80,7 +80,23 @@ const adminAuth = async (req, res, next) => {
       
       next();
     } catch (error) {
-      console.error("Admin auth error:", error);
+      console.error("Admin auth error:", error.message || error);
+      
+      // Handle specific JWT errors
+      if (error.message?.includes("JWT_SECRET is not configured")) {
+        return res.status(500).json({ 
+          success: false, 
+          message: "Server configuration error" 
+        });
+      }
+      
+      if (error.message?.includes("invalid signature")) {
+        return res.status(401).json({ 
+          success: false, 
+          message: "Session expired. Please log in again." 
+        });
+      }
+      
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 };

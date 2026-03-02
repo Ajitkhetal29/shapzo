@@ -20,6 +20,7 @@ export default function AppInitializer({ children }: { children: React.ReactNode
       setIsInitialized(true);
     };
 
+
     init();
   }, [pathname]);
 
