@@ -34,10 +34,10 @@ export default function RootLayout({
       >
 
       <Providers>
-        <Header />       
-         {children}
+        <Header />
+        {children}
         <ThemeAwareToast />
-         </Providers>
+      </Providers>
       </body>
     </html>
   );
