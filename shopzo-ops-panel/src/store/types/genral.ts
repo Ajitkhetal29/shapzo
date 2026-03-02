@@ -9,6 +9,10 @@ export type Role = {
     name: string;
     description?: string;
     code?: string;
+    department?: {
+        _id: string;
+        name: string;
+    };
 };
 
 

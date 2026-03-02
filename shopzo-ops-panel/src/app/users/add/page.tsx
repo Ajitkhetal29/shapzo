@@ -5,6 +5,7 @@ import { User } from "@/store/types/users";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { addUser } from "@/store/slices/userSlice";
+import { setDepartments, setRoles } from "@/store/slices/genralSlice";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/lib/api";
 import { toast } from "react-toastify";
@@ -23,10 +24,46 @@ const AddUserPage = () => {
         role: '',
     });
     const dispatch = useDispatch();
+    const departments = useSelector((state: RootState) => state.general.departments);
+    const roles = useSelector((state: RootState) => state.general.roles);
+    
+    useEffect(() => {
+        // Fetch departments if not in store
+        if (departments.length === 0) {
+            axios.get(API_ENDPOINTS.GET_DEPARTMENTS, { withCredentials: true })
+                .then((res) => {
+                    if (res.data.success) {
+                        dispatch(setDepartments(res.data.departments));
+                    }
+                })
+                .catch((err) => console.error("Error fetching departments:", err));
+        }
+        
+        // Fetch roles if not in store
+        if (roles.length === 0) {
+            axios.get(API_ENDPOINTS.GET_ROLES, { withCredentials: true })
+                .then((res) => {
+                    if (res.data.success) {
+                        dispatch(setRoles(res.data.roles));
+                    }
+                })
+                .catch((err) => console.error("Error fetching roles:", err));
+        }
+    }, [dispatch, departments.length, roles.length]);
+
+    // Filter roles by selected department
+    const filteredRoles = formData.department 
+        ? roles.filter((role) => role.department?._id === formData.department)
+        : [];
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value } );
-      
+        const { name, value } = e.target;
+        // Reset role when department changes
+        if (name === 'department') {
+            setFormData({ ...formData, department: value, role: '' });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -132,10 +169,9 @@ const AddUserPage = () => {
                                 required
                             >
                                 <option value="">Select department</option>
-                                <option value="admin">Admin</option>
-                                <option value="support">Support</option>
-                                <option value="delivery">Delivery</option>
-                                <option value="vendor">Vendor</option>
+                                {departments.map((dept) => (
+                                    <option key={dept._id} value={dept._id}>{dept.name}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -150,13 +186,20 @@ const AddUserPage = () => {
                                 onChange={handleInputChange} 
                                 className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
                                 required
+                                disabled={!formData.department}
                             >
-                                <option value="">Select role</option>
-                                <option value="superadmin">Superadmin</option>
-                                <option value="manager">Manager</option>
-                                <option value="team_leader">Team Leader</option>
-                                <option value="team_member">Team Member</option>
+                                <option value="">
+                                    {formData.department ? "Select role" : "Select department first"}
+                                </option>
+                                {filteredRoles.map((role) => (
+                                    <option key={role._id} value={role._id}>{role.name}</option>
+                                ))}
                             </select>
+                            {formData.department && filteredRoles.length === 0 && (
+                                <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+                                    No roles available for this department. Please create roles first.
+                                </p>
+                            )}
                         </div>
 
                         <div className="flex gap-3 pt-4">
