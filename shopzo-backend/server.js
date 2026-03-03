@@ -23,7 +23,6 @@ import userReportingRouter from "./routes/userReporting.js";
 import permissionRouter from "./routes/permission.js";
 import reverseGeocodeRouter from "./routes/reversegeocode.js";
 import User from "./models/user.js";
-import { createDepartment, createRole, createUser } from "./scripts/test.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;

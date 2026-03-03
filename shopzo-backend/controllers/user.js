@@ -18,27 +18,20 @@ export const createUser = async (req, res) => {
     const dept = await Department.findById(department);
     const roleDoc = await Role.findById(role);
 
-    if (!dept || !dept.isActive) {
+    if (!dept) {
       return res.status(400).json({
         success: false,
         message: "Invalid or inactive department",
       });
     }
 
-    if (!roleDoc || !roleDoc.isActive) {
+    if (!roleDoc) {
       return res.status(400).json({
         success: false,
         message: "Invalid or inactive role",
       });
     }
 
-    // Check if role belongs to department
-    if (roleDoc.department.toString() !== department) {
-      return res.status(400).json({
-        success: false,
-        message: "Role does not belong to selected department",
-      });
-    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -47,6 +40,8 @@ export const createUser = async (req, res) => {
         message: "User already exists",
       });
     }
+
+
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -59,8 +54,8 @@ export const createUser = async (req, res) => {
     });
 
     const populatedUser = await User.findById(user._id)
-      .populate("department", "name code")
-      .populate("role", "name code");
+      .populate("department", "name")
+      .populate("role", "name");
 
     return res.status(201).json({
       success: true,
@@ -84,7 +79,7 @@ export const createUser = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const { department, role, isActive } = req.query;
+    const { department, role, limit, page } = req.query;
     const filter = {};
 
     // Always exclude buyer department users (ops panel shouldn't see buyers)
@@ -110,11 +105,14 @@ export const getUsers = async (req, res) => {
     const users = await User.find(filter)
       .populate("department", "name code")
       .populate("role", "name code")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(((parseInt(page) || 1) - 1) * (parseInt(limit) || 10))
+      .limit(parseInt(limit) || 10);
 
     return res.status(200).json({
       success: true,
       users,
+      total: await User.countDocuments(filter),
     });
   } catch (error) {
     console.error("Get users error:", error);

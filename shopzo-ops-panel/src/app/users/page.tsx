@@ -18,13 +18,27 @@ const UserPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [deletModalOpen, setDeletModalOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [totalUsers, setTotalUsers] = useState(0);
+    const [pagination, setPagination] = useState({
+        page: 1,
+        limit: 10,
+
+    })
+
 
     const fetchUsers = async () => {
         try {
             setIsLoading(true);
-            const response = await axios.get(API_ENDPOINTS.GET_OPS_USERS);
+            const response = await axios.get(API_ENDPOINTS.GET_OPS_USERS, {
+                withCredentials: true,
+                params: {
+                    page: pagination.page,
+                    limit: pagination.limit
+                }
+            });
             if (response.status === 200) {
                 dispatch(setUsers(response.data.users));
+                setTotalUsers(response.data.total);
             }
         } catch (error) {
             console.error("Error fetching users:", error);
@@ -37,7 +51,7 @@ const UserPage = () => {
 
     const handleDelete = async (id: string) => {
         try {
-            const response = await axios.delete(`${API_ENDPOINTS.DELETE_OPS_USER}/${id}`);
+            const response = await axios.delete(`${API_ENDPOINTS.DELETE_OPS_USER}/${id}`, { withCredentials: true });
             if (response.status === 200) {
                 dispatch(deleteUser(id));
                 toast.success("User deleted successfully");
@@ -82,8 +96,8 @@ const UserPage = () => {
                         <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Users</h1>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage staff accounts and permissions</p>
                     </div>
-                    <Link 
-                        href="/users/add" 
+                    <Link
+                        href="/users/add"
                         className="inline-flex items-center justify-center px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm"
                     >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,6 +202,59 @@ const UserPage = () => {
                                 )}
                             </tbody>
                         </table>
+                        <div className="px-6 py-3 bg-gray-50 dark:bg-slate-700 flex items-center justify-between">
+                            <div className="text-sm text-gray-700 dark:text-gray-400">
+                                Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, totalUsers)} of {totalUsers} users
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setPagination(prev => ({ ...prev, page: Math.max(prev.page - 1, 1) }))}
+                                    disabled={pagination.page === 1}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium ${pagination.page === 1 ? 'bg-gray-300 dark:bg-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors'}`}
+                                >
+                                    Previous
+                                </button>
+
+                                <div>
+                                    {for (let i = 1; i <= Math.ceil(totalUsers / pagination.limit); i++) {
+
+                                        <button
+                                            key={i} 
+                                            onClick={() => setPagination(prev => ({ ...prev, page: i }))}
+                                            className={`mx-1 px-3 py-1 rounded-md text-sm font-medium ${pagination.page === i ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors'}`}
+                                        >
+                                            {i}         
+                                        </button>
+                                    }       
+                                    }
+
+                                </div>
+
+                                <button
+                                    onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                                    disabled={pagination.page * pagination.limit >= totalUsers}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium ${pagination.page * pagination.limit >= totalUsers ? 'bg-gray-300 dark:bg-slate-600 text-gray-500 dark:text-gray-400 cursor-not-allowed' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors'}`}
+                                >
+                                    Next
+                                </button>
+
+
+                            </div>
+
+                            <div>
+                                <select
+                                    value={pagination.limit}
+                                    onChange={(e) => setPagination(prev => ({ ...prev, limit: parseInt(e.target.value) }))}
+                                    className="ml-3 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                                >
+
+                                    <option value={10}>10 </option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                </select>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>

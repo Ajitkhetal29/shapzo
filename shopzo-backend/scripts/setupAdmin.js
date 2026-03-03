@@ -5,7 +5,7 @@ import Role from "../models/role.js";
 import User from "../models/user.js";
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ path: '../.env' });
 
 const MONGODB_URI = process.env.MONGO_URI;
 
@@ -38,8 +38,7 @@ const setupAdmin = async () => {
     // Step 4: Create admin role for admin department
     const adminRole = await Role.create({
       name: "admin",
-      department: adminDepartment._id,
-    });
+      description: "Admin role with full permissions",});
     console.log(`Created role: ${adminRole.name} (ID: ${adminRole._id})`);
 
     // Step 5: Check if user already exists, delete if exists

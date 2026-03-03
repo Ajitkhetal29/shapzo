@@ -6,18 +6,10 @@ const roleSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
-
-    isActive: {
-        type: Boolean,
-        default: true,
+    description: {
+        type: String,
+        trim: true,
     },
-    department: {
-        type:mongoose.Schema.Types.ObjectId,
-        ref: "Department",
-        required: true,
-    },
-  
-
 
 }, { timestamps: true });
     

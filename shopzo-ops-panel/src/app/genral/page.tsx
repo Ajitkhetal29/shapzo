@@ -19,10 +19,11 @@ const GeneralPage = () => {
     const [error, setError] = useState<string | null>(null);
     const [addDepartmentModalOpen, setAddDepartmentModalOpen] = useState(false);
     const [deleteDepartmentModalOpen, setDeleteDepartmentModalOpen] = useState(false);
-    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null);
     const [addRoleModalOpen, setAddRoleModalOpen] = useState(false);
     const [deleteRoleModalOpen, setDeleteRoleModalOpen] = useState(false);
     const [selectedRoleId, setSelectedRoleId] = useState<string | null>(null);
+    const [selectedDepartmentId, setSelectedDepartmentId] = useState<string | null>(null);
+
 
 
     const [addDepartmentFormData, setAddDepartmentFormData] = useState({
@@ -34,9 +35,7 @@ const GeneralPage = () => {
     const [addRoleFormData, setAddRoleFormData] = useState({
         name: "",
         description: "",
-        department: "",
     });
-    const [roleFilterDepartment, setRoleFilterDepartment] = useState<string>("");
 
 
 
@@ -80,9 +79,9 @@ const GeneralPage = () => {
         } finally {
             setIsLoading(false);
         }
-    } 
+    }
 
-    
+
 
     const handleAddDepartment = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -113,7 +112,7 @@ const GeneralPage = () => {
             const response = await axios.post(API_ENDPOINTS.CREATE_ROLE, addRoleFormData, { withCredentials: true });
             if (response.data.success) {
                 dispatch(addRole(response.data.role));
-                setAddRoleFormData({ name: "", description: "", department: "" });
+                setAddRoleFormData({ name: "", description: "" });
                 setAddRoleModalOpen(false);
             } else {
                 setError(response.data.message || "Failed to add role");
@@ -238,22 +237,6 @@ const GeneralPage = () => {
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Add Role</h2>
                             <form onSubmit={handleAddRole}>
                                 <div className="mb-4">
-                                    <label htmlFor="roleDepartment" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Department <span className="text-red-500">*</span></label>
-                                    <select 
-                                        value={addRoleFormData.department} 
-                                        onChange={handleAddRoleFormData} 
-                                        id="roleDepartment" 
-                                        name="department" 
-                                        className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" 
-                                        required
-                                    >
-                                        <option value="">Select department</option>
-                                        {departments.map((dept) => (
-                                            <option key={dept._id} value={dept._id}>{dept.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="mb-4">
                                     <label htmlFor="roleName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Role Name <span className="text-red-500">*</span></label>
                                     <input value={addRoleFormData.name} onChange={handleAddRoleFormData} type="text" id="roleName" name="name" className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm" placeholder="Enter role name" required />
                                 </div>
@@ -264,7 +247,7 @@ const GeneralPage = () => {
                                 <div className="flex gap-3">
                                     <button type="button" onClick={() => {
                                         setAddRoleModalOpen(false);
-                                        setAddRoleFormData({ name: "", description: "", department: "" });
+                                        setAddRoleFormData({ name: "", description: "" });
                                     }} className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">Cancel</button>
                                     <button type="submit" disabled={isLoading} className="flex-1 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50">Add Role</button>
                                 </div>
@@ -348,20 +331,7 @@ const GeneralPage = () => {
                             </button>
                         </div>
 
-                        <div className="mb-4">
-                            <label htmlFor="roleFilter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Filter by Department</label>
-                            <select 
-                                id="roleFilter"
-                                value={roleFilterDepartment}
-                                onChange={(e) => setRoleFilterDepartment(e.target.value)}
-                                className="w-full px-4 py-2 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm"
-                            >
-                                <option value="">All Departments</option>
-                                {departments.map((dept) => (
-                                    <option key={dept._id} value={dept._id}>{dept.name}</option>
-                                ))}
-                            </select>
-                        </div>
+
 
                         <div className="mt-4">
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-slate-700">
@@ -374,23 +344,20 @@ const GeneralPage = () => {
                                 </thead>
                                 <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-200 dark:divide-slate-700">
                                     {roles
-                                        .filter((role) => !roleFilterDepartment || role.department?._id === roleFilterDepartment)
                                         .map((role) => (
-                                        <tr key={role._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{role.name}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                                                {role.department?.name || "N/A"}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300" onClick={() => {
-                                                    setDeleteRoleModalOpen(true);
-                                                    setSelectedRoleId(role._id);
-                                                }}>
-                                                    Delete
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                            <tr key={role._id} className="hover:bg-gray-50 dark:hover:bg-slate-700">
+                                                <td className="px-6 py-4 whitespace-nowrap text-gray-900 dark:text-white">{role.name}</td>
+
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <button className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300" onClick={() => {
+                                                        setDeleteRoleModalOpen(true);
+                                                        setSelectedRoleId(role._id);
+                                                    }}>
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>
