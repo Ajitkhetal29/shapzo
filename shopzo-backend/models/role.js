@@ -10,6 +10,10 @@ const roleSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    level: {
+        type: Number,
+        required: true,
+    },
 
 }, { timestamps: true });
     

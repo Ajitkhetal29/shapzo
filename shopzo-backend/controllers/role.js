@@ -3,7 +3,7 @@ import Department from "../models/department.js";
 
 export const createRole = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, level } = req.body;
 
     if (!name) {
       return res.status(400).json({
@@ -12,14 +12,23 @@ export const createRole = async (req, res) => {
       });
     }
 
+    if(!level || level < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Role level is required and should be greater than 0",
+      });
+    }
+
     const role = await Role.create({
       name,
       description,
+      level,
     });
 
     const populatedRole = await Role.findById(role._id).populate(
       "name",
       "description",
+      "level"
     );
 
     return res.status(201).json({
@@ -46,6 +55,7 @@ export const getRoles = async (req, res) => {
   try {
     const roles = await Role.find({})
       .populate("name")
+      .populate("level")
       .sort({ createdAt: -1 });
 
     return res.status(200).json({

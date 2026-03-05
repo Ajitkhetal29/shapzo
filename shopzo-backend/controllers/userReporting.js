@@ -6,10 +6,10 @@ export const createUserReporting = async (req, res) => {
   try {
     const { user, reportingTo, department } = req.body;
 
-    if (!user || !reportingTo || !department) {
+    if (!user || !reportingTo || department) {
       return res.status(400).json({
         success: false,
-        message: "User, reportingTo, and department are required",
+        message: "User , departmet and reportingTo are required",
       });
     }
 
@@ -17,37 +17,27 @@ export const createUserReporting = async (req, res) => {
     const userDoc = await User.findById(user);
     const managerDoc = await User.findById(reportingTo);
 
-    if (!userDoc || !userDoc.isActive) {
+    if (!userDoc) {
       return res.status(400).json({
         success: false,
         message: "Invalid or inactive user",
       });
     }
 
-    if (!managerDoc || !managerDoc.isActive) {
+    if (!managerDoc) {
       return res.status(400).json({
         success: false,
         message: "Invalid or inactive manager",
       });
     }
 
-    // Validate department
-    const dept = await Department.findById(department);
-    if (!dept || !dept.isActive) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid or inactive department",
-      });
-    }
-
-    // Check if user and manager belong to same department
     if (
-      userDoc.department.toString() !== department ||
-      managerDoc.department.toString() !== department
+      userDoc.department !== department ||
+      managerDoc.department !== department
     ) {
       return res.status(400).json({
         success: false,
-        message: "User and manager must belong to the same department",
+        message: "Department Cant be different",
       });
     }
 
@@ -58,7 +48,7 @@ export const createUserReporting = async (req, res) => {
       department,
     });
 
-    if (existingReporting) {     
+    if (existingReporting) {
       return res.status(400).json({
         success: false,
         message: "Reporting relationship already exists",
@@ -81,7 +71,6 @@ export const createUserReporting = async (req, res) => {
       message: "Reporting relationship created successfully",
       userReporting: populated,
     });
-
   } catch (error) {
     console.error("Create user reporting error:", error);
     if (error.name === "ValidationError") {
@@ -99,7 +88,7 @@ export const createUserReporting = async (req, res) => {
 
 export const getUserReportings = async (req, res) => {
   try {
-    const { user, reportingTo, department } = req.query;
+    const { user, reportingTo, department, page, limit } = req.query;
     const filter = {};
 
     if (user) filter.user = user;
@@ -110,7 +99,11 @@ export const getUserReportings = async (req, res) => {
       .populate("user", "name email department role")
       .populate("reportingTo", "name email department role")
       .populate("department", "name")
+      .skip(((parseInt(page) || 1) - 1) * (parseInt(limit) || 10))
+      .limit(parseInt(limit) || 10)
       .sort({ createdAt: -1 });
+
+      
 
     return res.status(200).json({
       success: true,
@@ -200,7 +193,6 @@ export const updateUserReporting = async (req, res) => {
       userReporting.department = department;
     }
 
-   
     await userReporting.save();
 
     const populated = await UserReporting.findById(userReporting._id)

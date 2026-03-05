@@ -32,7 +32,6 @@ export const createUser = async (req, res) => {
       });
     }
 
-
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({
@@ -40,8 +39,6 @@ export const createUser = async (req, res) => {
         message: "User already exists",
       });
     }
-
-
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -80,31 +77,36 @@ export const createUser = async (req, res) => {
 export const getUsers = async (req, res) => {
   try {
     const { department, role, limit, page } = req.query;
+    console.log("Get users query:", req.query);
     const filter = {};
 
     // Always exclude buyer department users (ops panel shouldn't see buyers)
-    const buyerDepartment = await Department.findOne({ name: { $regex: /^buyer$/i } });
-    
+    const buyerDepartment = await Department.findOne({
+      name: { $regex: /^Buyer$/i },
+    });
+
+    if (!buyerDepartment) {
+      return res.status(500).json({
+        success: false,
+        message: "Buyer department not found in the system",
+      });
+    }
+
     if (department) {
-      // If trying to filter by buyer dept, return empty
-      if (buyerDepartment && department.toString() === buyerDepartment._id.toString()) {
-        return res.status(200).json({
-          success: true,
-          users: [],
-        });
-      }
       filter.department = department;
-    } else if (buyerDepartment) {
-      // Exclude buyers if no specific department filter
+    }
+
+    if (!department) {
       filter.department = { $ne: buyerDepartment._id };
     }
-    
-    if (role) filter.role = role;
-    if (isActive !== undefined) filter.isActive = isActive === "true";
+
+    if (role) {
+      filter.role = role;
+    }
 
     const users = await User.find(filter)
-      .populate("department", "name code")
-      .populate("role", "name code")
+      .populate("department", "name")
+      .populate("role", "name level")
       .sort({ createdAt: -1 })
       .skip(((parseInt(page) || 1) - 1) * (parseInt(limit) || 10))
       .limit(parseInt(limit) || 10);
@@ -126,6 +128,8 @@ export const getUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("getUserById called with id:", id);
+    
 
     const user = await User.findById(id)
       .populate("department", "name code")
@@ -165,8 +169,14 @@ export const updateUser = async (req, res) => {
     }
 
     // Prevent updating to buyer department
-    const buyerDepartment = await Department.findOne({ name: { $regex: /^buyer$/i } });
-    if (buyerDepartment && department && department.toString() === buyerDepartment._id.toString()) {
+    const buyerDepartment = await Department.findOne({
+      name: { $regex: /^buyer$/i },
+    });
+    if (
+      buyerDepartment &&
+      department &&
+      department.toString() === buyerDepartment._id.toString()
+    ) {
       return res.status(400).json({
         success: false,
         message: "Cannot assign user to buyer department",
@@ -269,6 +279,41 @@ export const deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete user error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const allUserWihRoleAndDepartment = async (req, res) => {
+  console.log("allUserWihRoleAndDepartment called");
+
+  const { department } = req.query;
+
+  let filter = {};
+
+  if (department) {
+    filter.department = department;
+  }
+
+
+
+  try {
+    const users = await User.find(filter)
+      .populate("department", "name")
+      .populate("role", "name level");
+
+      console.log('users',users);
+      
+
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+
+  } catch (error) {
+    console.error("Get users error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

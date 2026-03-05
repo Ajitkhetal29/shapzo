@@ -7,6 +7,7 @@ export type Role = {
     _id: string;
     name: string;
     description?: string;
+    level: number;
    
 };
 

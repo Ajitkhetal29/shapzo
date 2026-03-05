@@ -12,6 +12,9 @@ import Link from "next/link";
 
 const UserPage = () => {
 
+    const Roles = useSelector((state: RootState) => state.general.roles);
+    const Departments = useSelector((state: RootState) => state.general.departments);
+
     const dispatch = useDispatch<AppDispatch>();
     const users = useSelector((state: RootState) => state.user.users);
     const [isLoading, setIsLoading] = useState(false);
@@ -25,6 +28,11 @@ const UserPage = () => {
 
     })
 
+    const [filter, setFilter] = useState({
+        department: "",
+        role: ""
+    });
+
 
     const fetchUsers = async () => {
         try {
@@ -33,7 +41,9 @@ const UserPage = () => {
                 withCredentials: true,
                 params: {
                     page: pagination.page,
-                    limit: pagination.limit
+                    limit: pagination.limit,
+                    department: filter.department || '',
+                    role: filter.role || ''
                 }
             });
             if (response.status === 200) {
@@ -64,12 +74,9 @@ const UserPage = () => {
 
 
     useEffect(() => {
-        // Only fetch if users are not in Redux
-        if (!users || users.length === 0) {
-            fetchUsers();
-        }
+        fetchUsers();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [pagination.page, pagination.limit, filter.department, filter.role]);
 
     if (isLoading) {
         return (
@@ -96,7 +103,31 @@ const UserPage = () => {
                         <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">Users</h1>
                         <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage staff accounts and permissions</p>
                     </div>
-                    <Link
+                    <div>
+                        
+                        <select name="department" id="department" className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors" value={filter.department} onChange={(e) => setFilter({...filter, department: e.target.value})}>
+
+                            <option value="">All Departments</option>
+                            {Departments.map((dept) => (
+                                <option key={dept._id} value={dept._id}>
+                                    {dept.name}
+                                </option>
+                            ))}
+
+                        </select>
+
+                        <select name="role" id="role" className="ml-3 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 transition-colors" value={filter.role} onChange={(e) => setFilter({...filter, role: e.target.value})}>
+
+                            <option value="">All Roles</option> 
+                            {Roles.map((role) => (
+                                <option key={role._id} value={role._id}>
+                                    {role.name}
+                                </option>
+                            ))}
+
+                        </select>
+
+                        <Link
                         href="/users/add"
                         className="inline-flex items-center justify-center px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm"
                     >
@@ -105,6 +136,9 @@ const UserPage = () => {
                         </svg>
                         Add User
                     </Link>
+
+                    </div>
+                    
                 </div>
 
                 {/* Delete Modal */}
@@ -216,17 +250,26 @@ const UserPage = () => {
                                 </button>
 
                                 <div>
-                                    {for (let i = 1; i <= Math.ceil(totalUsers / pagination.limit); i++) {
+                                    {Array.from({ length: 5 }, (_, i) => {
+                                        const pageNum = pagination.page - 2 + i;
 
-                                        <button
-                                            key={i} 
-                                            onClick={() => setPagination(prev => ({ ...prev, page: i }))}
-                                            className={`mx-1 px-3 py-1 rounded-md text-sm font-medium ${pagination.page === i ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors'}`}
-                                        >
-                                            {i}         
-                                        </button>
-                                    }       
-                                    }
+                                        if (pageNum <= 0 || pageNum > Math.ceil(totalUsers / pagination.limit)) {
+                                            return null;
+                                        }
+
+                                        return (
+                                            <button
+                                                key={pageNum}
+                                                onClick={() => setPagination(prev => ({ ...prev, page: pageNum }))}
+                                                className={`mx-1 px-3 py-1 rounded-md text-sm font-medium ${pagination.page === pageNum
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors'
+                                                    }`}
+                                            >
+                                                {pageNum}
+                                            </button>
+                                        );
+                                    })}
 
                                 </div>
 

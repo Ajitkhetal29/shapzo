@@ -20,6 +20,7 @@ export const API_ENDPOINTS = {
   CREATE_OPS_USER: `${API_BASE_URL}/user/create`,
   UPDATE_OPS_USER: `${API_BASE_URL}/user/update`, // :id
   DELETE_OPS_USER: `${API_BASE_URL}/user/delete`, // :id
+  GET_ALL_USERS_WITH_ROLE_AND_DEPARTMENT: `${API_BASE_URL}/user/all`, // New endpoint to get all users with role and department details  
 
   // departments
   GET_DEPARTMENTS: `${API_BASE_URL}/department/list`,
@@ -46,5 +47,14 @@ export const API_ENDPOINTS = {
   UPDATE_VENDOR: `${API_BASE_URL}/vendor/update`, // :id
   DELETE_VENDOR: `${API_BASE_URL}/vendor/delete`, // :id
   GET_VENDOR_BY_ID: `${API_BASE_URL}/vendor`,  // get by id
+
+
+
+  GET_REPORTING : `${API_BASE_URL}/user-reporting/list`,
+  CREATE_REPORTING : `${API_BASE_URL}/user-reporting/create`,
+  UPDATE_REPORTING : `${API_BASE_URL}/user-reporting/update`, // :id
+  DELETE_REPORTING : `${API_BASE_URL}/user-reporting/delete`, // :id
+  
+
 
 };
