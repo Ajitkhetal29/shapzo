@@ -33,7 +33,6 @@ const adminAuth = async (req, res, next) => {
 
 
     const decoded = verifyToken(token);
-    console.log("decoded",decoded);
 
     if (!decoded || !decoded.id) {
       return res.status(401).json({ success: false, message: "Invalid token" });

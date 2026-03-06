@@ -11,6 +11,8 @@ const initialState: GeneralState = {
     roles: [],
 };
 
+
+
 const generalSlice = createSlice({
     name: "general",
     initialState,

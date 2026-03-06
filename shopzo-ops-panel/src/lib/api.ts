@@ -52,8 +52,18 @@ export const API_ENDPOINTS = {
 
   GET_REPORTING : `${API_BASE_URL}/user-reporting/list`,
   CREATE_REPORTING : `${API_BASE_URL}/user-reporting/create`,
+  CHECK_REPORTING : `${API_BASE_URL}/user-reporting/check`,
   UPDATE_REPORTING : `${API_BASE_URL}/user-reporting/update`, // :id
   DELETE_REPORTING : `${API_BASE_URL}/user-reporting/delete`, // :id
+
+
+
+
+  // categories
+  GET_CATEGORIES: `${API_BASE_URL}/category/list`,
+  CREATE_CATEGORY: `${API_BASE_URL}/category/create`,
+  DELETE_CATEGORY: `${API_BASE_URL}/category/delete`, // :id
+  UPDATE_CATEGORY: `${API_BASE_URL}/category/update`, // :id
   
 
 
