@@ -64,7 +64,17 @@ export const API_ENDPOINTS = {
   CREATE_CATEGORY: `${API_BASE_URL}/category/create`,
   DELETE_CATEGORY: `${API_BASE_URL}/category/delete`, // :id
   UPDATE_CATEGORY: `${API_BASE_URL}/category/update`, // :id
-  
 
+  // subcategories
+  GET_SUBCATEGORIES: `${API_BASE_URL}/subcategory/list`,
+  CREATE_SUBCATEGORY: `${API_BASE_URL}/subcategory/create`,
+  DELETE_SUBCATEGORY: `${API_BASE_URL}/subcategory/delete`, // :id
+  UPDATE_SUBCATEGORY: `${API_BASE_URL}/subcategory/update`, // :id
 
+  // product
+  GET_PRODUCTS: `${API_BASE_URL}/product/list`,
+  GET_PRODUCT_BY_ID: `${API_BASE_URL}/product`, // GET /:id
+  CREATE_PRODUCT: `${API_BASE_URL}/product/add`,
+  DELETE_PRODUCT: `${API_BASE_URL}/product/delete`, // :id
+  UPDATE_PRODUCT: `${API_BASE_URL}/product/update`, // :id
 };

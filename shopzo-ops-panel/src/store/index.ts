@@ -4,6 +4,7 @@ import warehouseReducer from "./slices/warehouseSlice";
 import userReducer from "./slices/userSlice";
 import vendorReducer from "./slices/vendorSlice";
 import generalReducer from "./slices/genralSlice";
+import productReducer from "./slices/productSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     user: userReducer,
     vendor: vendorReducer,
     general: generalReducer,
+    product: productReducer,
   },
 });
 

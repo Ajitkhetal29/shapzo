@@ -24,6 +24,7 @@ import permissionRouter from "./routes/permission.js";
 import reverseGeocodeRouter from "./routes/reversegeocode.js";
 import User from "./models/user.js";
 import categoryRouter from "./routes/category.js";
+import subcategoryRouter from "./routes/subcategory.js";
 import productRouter from "./routes/product.js";
 
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/user-reporting", userReportingRouter);
 app.use("/api/permission", permissionRouter);
 app.use("/api/reversegeocode", reverseGeocodeRouter);
 app.use("/api/category", categoryRouter);
+app.use("/api/subcategory", subcategoryRouter);
 app.use("/api/product", productRouter);
 
 // this route is for home page and set user

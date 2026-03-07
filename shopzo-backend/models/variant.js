@@ -33,7 +33,13 @@ const variantSchema = new mongoose.Schema(
       min: 0,
     },
 
-    image: String,
+    images: {
+      type: [{
+        url: String,
+        public_id: String,
+      }],
+      default: [],
+    },
 
     isActive: {
       type: Boolean,

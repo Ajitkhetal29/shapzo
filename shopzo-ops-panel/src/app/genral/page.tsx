@@ -3,6 +3,7 @@
 import Departments from "./components/Departments";
 import Roles from "./components/Roles";
 import Categories from "./components/Categories";
+import Subcategories from "./components/Subcategories";
 
 const GeneralPage = () => {
     return (
@@ -18,6 +19,9 @@ const GeneralPage = () => {
 
                 <div className="mt-6">
                     <Categories />
+                </div>
+                <div className="mt-6">
+                    <Subcategories />
                 </div>
             </div>
         </div>

@@ -15,7 +15,6 @@ const getAdminIds = async () => {
   }
 
   adminRoleId = admin._id;
-  console.log("adminId",adminRoleId);
   
 
   return adminRoleId;

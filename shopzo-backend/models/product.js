@@ -24,21 +24,31 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
+    subcategory: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Subcategory",
+      default: null,
+      index: true,
+    },
+
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Vendor",
       required: true,
       index: true,
     },
-
+  
     images: {
-      type: [String],
+      type: [{
+        url: String,
+        public_id: String,
+      }],
       default: [],
     },
 
     status: {
       type: String,
-      enum: ["draft", "active", "inactive", "out_of_stock"],
+      enum: ["draft", "active", "inactive"],
       default: "draft",
     },
   },
@@ -48,5 +58,6 @@ const productSchema = new mongoose.Schema(
 // Indexes
 productSchema.index({ vendor: 1, status: 1 });
 productSchema.index({ category: 1, status: 1 });
+productSchema.index({ subcategory: 1, status: 1 });
 
 export default mongoose.model("Product", productSchema);
