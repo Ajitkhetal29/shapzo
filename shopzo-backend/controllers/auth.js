@@ -4,6 +4,19 @@ import Department from "../models/department.js";
 import Role from "../models/role.js";
 import { generateToken } from "../utils/jwt.js";
 
+/** Get or create default buyer department and role */
+async function getOrCreateBuyerDeptAndRole() {
+  let buyerDept = await Department.findOne({ name: { $regex: /^buyer$/i } });
+  if (!buyerDept) {
+    buyerDept = await Department.create({ name: "Buyer", description: "Buyer department for customer users" });
+  }
+  let buyerRole = await Role.findOne({ name: { $regex: /^buyer$/i } });
+  if (!buyerRole) {
+    buyerRole = await Role.create({ name: "Buyer", description: "Buyer role for customer users", level: 1 });
+  }
+  return { buyerDepartment: buyerDept, buyerRole };
+}
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -23,25 +36,8 @@ const register = async (req, res) => {
       });
     }
 
-    // Find buyer department and role
-    const buyerDepartment = await Department.findOne({ name: { $regex: /^buyer$/i } });
-    if (!buyerDepartment) {
-      return res.status(500).json({
-        success: false,
-        message: "Buyer department not found. Please run setup script first.",
-      });
-    }
-
-    const buyerRole = await Role.findOne({ 
-      name: { $regex: /^buyer$/i },
-      department: buyerDepartment._id 
-    });
-    if (!buyerRole) {
-      return res.status(500).json({
-        success: false,
-        message: "Buyer role not found. Please run setup script first.",
-      });
-    }
+// Default: buyer dept + buyer role (create if missing)
+    const { buyerDepartment, buyerRole } = await getOrCreateBuyerDeptAndRole();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -211,25 +207,8 @@ const buyerRegister = async (req, res) => {
       });
     }
 
-    // Find buyer department and role
-    const buyerDepartment = await Department.findOne({ name: { $regex: /^buyer$/i } });
-    if (!buyerDepartment) {
-      return res.status(500).json({
-        success: false,
-        message: "Buyer department not found. Please run setup script first.",
-      });
-    }
-
-    const buyerRole = await Role.findOne({ 
-      name: { $regex: /^buyer$/i },
-      department: buyerDepartment._id 
-    });
-    if (!buyerRole) {
-      return res.status(500).json({
-        success: false,
-        message: "Buyer role not found. Please run setup script first.",
-      });
-    }
+    // Default: buyer dept + buyer role (create if missing)
+    const { buyerDepartment, buyerRole } = await getOrCreateBuyerDeptAndRole();
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -280,14 +259,8 @@ const buyerLogin = async (req, res) => {
       });
     }
 
-    // Find buyer department first
-    const buyerDepartment = await Department.findOne({ name: { $regex: /^buyer$/i } });
-    if (!buyerDepartment) {
-      return res.status(500).json({
-        success: false,
-        message: "Buyer department not found. Please run setup script first.",
-      });
-    }
+    // Default: buyer dept (create if missing)
+    const { buyerDepartment } = await getOrCreateBuyerDeptAndRole();
 
     // Find user with buyer department
     const user = await User.findOne({ 

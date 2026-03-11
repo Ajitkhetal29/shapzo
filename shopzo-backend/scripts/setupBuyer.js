@@ -15,24 +15,20 @@ const setupBuyer = async () => {
       buyerDepartment = await Department.create({
         name: "Buyer",
         description: "Buyer department for customer users",
-        isActive: true,
       });
       console.log("✅ Buyer department created:", buyerDepartment._id);
     } else {
       console.log("✅ Buyer department already exists:", buyerDepartment._id);
     }
 
-    // Create or find buyer role
-    let buyerRole = await Role.findOne({ 
-      name: { $regex: /^buyer$/i },
-      department: buyerDepartment._id 
-    });
+    // Create or find buyer role (roles are separate from departments)
+    let buyerRole = await Role.findOne({ name: { $regex: /^buyer$/i } });
 
     if (!buyerRole) {
       buyerRole = await Role.create({
         name: "Buyer",
-        department: buyerDepartment._id,
-        isActive: true,
+        description: "Buyer role for customer users",
+        level: 1,
       });
       console.log("✅ Buyer role created:", buyerRole._id);
     } else {
