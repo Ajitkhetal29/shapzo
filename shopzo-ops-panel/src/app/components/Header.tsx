@@ -8,29 +8,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/store";
 import { setUser, logout } from "@/store/slices/authSlice";
 import Link from "next/link";
-
-// Helper function to get department code/name (handles both string and object)
-const getDepartmentCode = (department: any): string => {
-  if (!department) return "";
-  if (typeof department === "string") return department.toLowerCase();
-  if (department.code) return department.code.toLowerCase();
-  if (department.name) return department.name.toLowerCase();
-  return "";
-};
-
-// Helper function to get department name for display
-const getDepartmentName = (department: any): string => {
-  if (!department) return "";
-  if (typeof department === "string") return department;
-  return department.name || department.code || "";
-};
-
-// Helper function to get role name for display
-const getRoleName = (role: any): string => {
-  if (!role) return "";
-  if (typeof role === "string") return role;
-  return role.name || role.code || "";
-};
+import getMenuItemsByDepartment, { getDepartmentCode, getDepartmentName, getRoleName } from "@/services/menuHelper";
 
 const Header = () => {
   const router = useRouter();
@@ -41,50 +19,8 @@ const Header = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   const [isVerifying, setIsVerifying] = useState(true);
 
-  const handleMenuItems = (departmentCode: string): { label: string, href: string }[] => {
-    switch (departmentCode) {
-      case "admin":
-        return [
-          { label: "Dashboard", href: "/dashboards/admin" },
-          { label: "Users", href: "/users" },
-          {label: "Warehouses", href: "/warehouse" },
-          {label: "Vendor", href: "/vendor" },
-          {label: "General", href: "/genral" },
-          {label: "Support", href: "/support" },
-          {label: "Products", href: "/products" },
-          {label: "Orders", href: "/orders" },
-          
-        ];
-      case "delivery":
-        return [
-          { label: "Dashboard", href: "/dashboards/delivery" },
-          {label: "Orders", href: "/orders" },
-          {label: "Team", href: "/Team" },
-          {label: "History", href: "/History" },
-        ];
-      case "support":
-        return [
-          { label: "Dashboard", href: "/dashboards/support" },
-          {label: "Tickets", href: "/tickets" },
-          {label: "Team", href: "/Team" },
-          {label: "History", href: "/History" },
-        ];
-      case "vendor":
-        return [
-          { label: "Dashboard", href: "/dashboards/vendor" },
-          {label: "Products", href: "/products" },
-          {label: "Orders", href: "/orders" },
-          {label: "Team", href: "/Team" },
-          {label: "History", href: "/History" },
-        ];
-      default:
-        return [];
-    }
-  };
-
-  // Compute menu items directly from user
   const departmentCode = user?.department ? getDepartmentCode(user.department) : "";
-  const menuItems = departmentCode ? handleMenuItems(departmentCode) : [];
+  const menuItems = getMenuItemsByDepartment(departmentCode);
 
   // Verify auth on mount and restore user state
   useEffect(() => {
@@ -99,11 +35,8 @@ const Header = () => {
     if (user) {
       setIsVerifying(false);
       if (pathname === "/") {
-        const deptCode = getDepartmentCode(user.department);
-        if (deptCode === "admin") router.push("/dashboards/admin");
-        else if (deptCode === "delivery") router.push("/dashboards/delivery");
-        else if (deptCode === "support") router.push("/dashboards/support");
-        else if (deptCode === "vendor") router.push("/dashboards/vendor");
+        const dc = getDepartmentCode(user.department);
+        router.push(dc ? `/dashboards/${dc}` : "/login");
       }
       return;
     }
@@ -123,11 +56,8 @@ const Header = () => {
             
             // If on root page, redirect to dashboard based on role
             if (pathname === "/") {
-              const deptCode = getDepartmentCode(verifiedUser.department);
-              if (deptCode === "admin") router.push("/dashboards/admin");
-              else if (deptCode === "delivery") router.push("/dashboards/delivery");
-              else if (deptCode === "support") router.push("/dashboards/support");
-              else if (deptCode === "vendor") router.push("/dashboards/vendor");
+              const dc = getDepartmentCode(verifiedUser.department);
+              router.push(dc ? `/dashboards/${dc}` : "/login");
             }
           } else {
             // Not authenticated, redirect to login
@@ -152,14 +82,6 @@ const Header = () => {
       isMounted = false;
     };
   }, [dispatch, pathname, router, user]);
-
-  
-  
-
-
-  
-  
-
 
   const handleLogout = async () => {
     try {
