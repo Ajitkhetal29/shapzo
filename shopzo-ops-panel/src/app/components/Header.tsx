@@ -157,6 +157,10 @@ const Header = () => {
   
 
 
+  
+  
+
+
   const handleLogout = async () => {
     try {
       const res = await axios.post(API_ENDPOINTS.LOGOUT, {}, {
@@ -174,6 +178,7 @@ const Header = () => {
       setError(error.message);
     }
   };
+
 
 
   if (pathname === "/login") return null;
