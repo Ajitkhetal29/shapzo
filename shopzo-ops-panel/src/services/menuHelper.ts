@@ -9,9 +9,9 @@ const getMenuItemsByDepartment = (department: string, _role?: string): MenuItem[
     return [
       { label: "Dashboard", href: "/dashboards/admin" },
       { label: "Users", href: "/users" },
-      { label: "Warehouses", href: "/warehouses" },
-      { label: "Vendors", href: "/vendors" },
-      { label: "General", href: "/general" },
+      { label: "Warehouses", href: "/warehouse" },
+      { label: "Vendors", href: "/vendor" },
+      { label: "General", href: "/genral" },
       { label: "Support", href: "/support" },
       { label: "Products", href: "/products" },
       { label: "Orders", href: "/orders" },
@@ -20,29 +20,19 @@ const getMenuItemsByDepartment = (department: string, _role?: string): MenuItem[
 
   if (d === "delivery") {
     return [
-      { label: "Dashboard", href: "/dashboards/delivery" },
-      { label: "Orders", href: "/orders" },
-      { label: "Team", href: "/team" },
-      { label: "History", href: "/history" },
+     
     ];
   }
 
   if (d === "support") {
     return [
-      { label: "Dashboard", href: "/dashboards/support" },
-      { label: "Tickets", href: "/tickets" },
-      { label: "Team", href: "/team" },
-      { label: "History", href: "/history" },
+ 
     ];
   }
 
   if (d === "vendor") {
     return [
-      { label: "Dashboard", href: "/dashboards/vendor" },
-      { label: "Products", href: "/products" },
-      { label: "Orders", href: "/orders" },
-      { label: "Team", href: "/team" },
-      { label: "History", href: "/history" },
+   
     ];
   }
 
