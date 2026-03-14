@@ -6,7 +6,6 @@ import Role from "../models/role.js";
 // Cache admin department and admin role IDs
 let adminRoleId = null;
 
-
 const getAdminIds = async () => {
   const admin = await Role.findOne({ name: "Admin" }).populate("name");
 
@@ -20,7 +19,6 @@ const getAdminIds = async () => {
   return adminRoleId;
 
 };
-
 
 const adminAuth = async (req, res, next) => {
   try {

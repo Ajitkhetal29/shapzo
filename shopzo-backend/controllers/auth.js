@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.js";
+import Vendor from "../models/vendor.js";
 import Department from "../models/department.js";
 import Role from "../models/role.js";
 import { generateToken } from "../utils/jwt.js";
@@ -17,7 +18,10 @@ async function getOrCreateBuyerDeptAndRole() {
   return { buyerDepartment: buyerDept, buyerRole };
 }
 
+
+
 const register = async (req, res) => {
+
   try {
     const { name, email, password } = req.body;
 
@@ -49,10 +53,12 @@ const register = async (req, res) => {
       role: buyerRole._id,
     });
 
+
     const populatedUser = await User.findById(user._id)
       .select("-password")
       .populate("department", "name")
       .populate("role", "name");
+
 
     const token = generateToken({ id: user._id, role: user.role, name: user.name });
 
@@ -68,6 +74,7 @@ const register = async (req, res) => {
       message: "User created successfully",
       user: populatedUser
     });
+
   } catch (error) {
     console.error("Register error:", error);
     return res.status(500).json({
@@ -359,4 +366,6 @@ const logout = async (req, res) => {
     });
   }
 };
+
+
 export { register, login, logout, buyerRegister, buyerLogin };

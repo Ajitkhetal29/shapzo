@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import Vendor from "../models/vendor.js";
+import { generateToken } from "../utils/jwt.js";
 
 export const createVendor = async (req, res) => {
   try {
@@ -230,6 +231,61 @@ export const deleteVendor = async (req, res) => {
     console.error("Delete vendor error:", error);
     return res.status(500).json({
       success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+export const vendorLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const vendor = await Vendor.findOne({ email });
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+    const isPasswordCorrect = await bcrypt.compare(password, vendor.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+    const token = generateToken({ id: vendor._id, role: vendor.role, name: vendor.name });
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    return res.status(200).json({
+      success: true,
+      message: "Vendor logged in successfully",
+      token,
+    });
+  } catch (error) {
+    console.error("Vendor login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const vendorLogout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    return res.status(200).json({
+      success: true,
+      message: "Vendor logged out successfully",
+    });
+  } catch (error) {
+    console.error("Vendor logout error:", error);
+    return res.status(500).json({
+      success: false, 
       message: "Internal server error",
     });
   }

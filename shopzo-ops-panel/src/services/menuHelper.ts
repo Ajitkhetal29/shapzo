@@ -1,66 +1,47 @@
+type User = {
+  department?: { name: string } | string;
+  role?: { name: string } | string;
+};
 
+const nameOf = (v: { name?: string } | string | undefined) =>
+  typeof v === "object" && v ? v.name : v;
 
-export type MenuItem = { label: string; href: string };
+const getheaderMenuItems = (user: User | null): { label: string; href: string }[] => {
+  const dept = nameOf(user?.department);
+  const roleName = nameOf(user?.role);
 
-const getMenuItemsByDepartment = (department: string, _role?: string): MenuItem[] => {
-  const d = department?.toLowerCase() || "";
-
-  if (d === "admin") {
-    return [
-      { label: "Dashboard", href: "/dashboards/admin" },
-      { label: "Users", href: "/users" },
-      { label: "Warehouses", href: "/warehouse" },
-      { label: "Vendors", href: "/vendor" },
-      { label: "General", href: "/genral" },
-      { label: "Support", href: "/support" },
-      { label: "Products", href: "/products" },
-      { label: "Orders", href: "/orders" },
-    ];
+  if (dept === "Admin") {
+    switch (roleName) {
+    case "Admin":
+      return [
+        { label: "Dashboard", href: "/dashboards/admin" },
+        { label: "Users", href: "/users" },
+        { label: "Warehouses", href: "/warehouse" },
+        { label: "Vendors", href: "/vendor" },
+        { label: "General", href: "/genral" },
+        { label: "Support", href: "/support" },
+        { label: "Products", href: "/products" },
+        { label: "Orders", href: "/orders" },
+      ];
+    }
   }
 
-  if (d === "delivery") {
-    return [
-     
-    ];
+  if (dept === "delivery") {
+    return [];
   }
 
-  if (d === "support") {
+  if (dept === "support") {
     return [
  
     ];
   }
 
-  if (d === "vendor") {
-    return [
-   
-    ];
-  }
+ 
+  
 
   return [];
 };
 
-export const getDepartmentCode = (department: unknown): string => {
-  if (!department) return "";
-  if (typeof department === "string") return department.toLowerCase();
-  const d = department as { code?: string; name?: string };
-  return (d.code || d.name || "").toLowerCase();
-};
 
-export const getDepartmentName = (department: unknown): string => {
-  if (!department) return "";
-  if (typeof department === "string") return department;
-  const d = department as { name?: string; code?: string };
-  return d.name || d.code || "";
-};
 
-export const getRoleName = (role: unknown): string => {
-  if (!role) return "";
-  if (typeof role === "string") return role;
-  const r = role as { name?: string; code?: string };
-  return r.name || r.code || "";
-};
-
-export const getDashboardPath = (departmentCode: string): string =>
-  departmentCode ? `/dashboards/${departmentCode}` : "/login";
-
-export default getMenuItemsByDepartment;
+export { getheaderMenuItems };

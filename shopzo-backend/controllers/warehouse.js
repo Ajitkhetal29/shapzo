@@ -352,3 +352,83 @@ export const removeWarehouseMember = async (req, res) => {
     });
   }
 };
+
+export const vendorLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+    const vendor = await Vendor.findOne({ email });
+    if (!vendor) {
+      return res.status(401).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+    const isMatch = await bcrypt.compare(password, vendor.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+
+    const token = generateToken({ id: vendor._id, name: vendor.name });
+   
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "  successfull",
+      token
+    });
+
+  } catch (error) {
+    console.error("Vendor login error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const vendorLogout = async (req, res) => {
+  try {
+    res.clearCookie("token");
+    return res.status(200).json({
+      success: true,
+      message: "logout successfully",
+    });
+  } catch (error) {
+    console.error("Vendor logout error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export const vendorMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+    const decoded = verifyToken(token);
+    const vendor = await Vendor.findById(decoded.id);
+    return res.status(200).json({
+      success: true,
+      message: "Vendor me successfully",
+    });
+  } catch (error) {
+    console.error("Vendor me error:", error);
+  }
+};
+
