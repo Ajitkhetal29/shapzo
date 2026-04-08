@@ -15,3 +15,15 @@ export type Product = {
   createdAt?: string;
   updatedAt?: string;
 };
+
+
+export type ProductVariant = {
+  _id: string;
+  productId: string;
+  price: number;
+  color?: string;
+  size: string;
+  sku: string;
+  stock: number;
+  images: { url: string; public_id: string }[];
+};

@@ -25,6 +25,7 @@ import Vendor from "./models/vendor.js";
 import categoryRouter from "./routes/category.js";
 import subcategoryRouter from "./routes/subcategory.js";
 import productRouter from "./routes/product.js";
+import dashboardRouter from "./routes/dashboard.js";
 import { authMiddleware, vendorAuthMiddleware } from "./middleware/auth.js";
 
 const app = express();
@@ -62,6 +63,7 @@ app.use("/api/reversegeocode", reverseGeocodeRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/subcategory", subcategoryRouter);
 app.use("/api/product", productRouter);
+app.use("/api/dashboard", dashboardRouter);
 
 // this route is for home page and set user
 

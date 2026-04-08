@@ -7,6 +7,14 @@ export const API_ENDPOINTS = {
   LOGOUT: `${API_BASE_URL}/auth/logout`,
   CURRENT_USER: `${API_BASE_URL}/me`,
 
+  
+  // dashboard stats
+  GET_DASHBOARD_STATS: `${API_BASE_URL}/dashboard/stats`,
+
+
+
+
+
   // warehouse
 
   CREATE_WAREHOUSES: `${API_BASE_URL}/warehouse/create`,
@@ -77,4 +85,10 @@ export const API_ENDPOINTS = {
   CREATE_PRODUCT: `${API_BASE_URL}/product/add`,
   DELETE_PRODUCT: `${API_BASE_URL}/product/delete`, // :id
   UPDATE_PRODUCT: `${API_BASE_URL}/product/update`, // :id
+  CREATE_VARIANT: `${API_BASE_URL}/product/variants/add`,
+  GET_PRODUCT_VARIANTS: `${API_BASE_URL}/product/variants/product`, // GET /:productId
+  UPDATE_VARIANT: `${API_BASE_URL}/product/variants/update`, // :id
+  DELETE_VARIANT: `${API_BASE_URL}/product/variants/delete`, // :id
+  GET_VARIANT_BY_ID: `${API_BASE_URL}/product/variants`, // GET /:id
+
 };

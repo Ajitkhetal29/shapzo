@@ -264,6 +264,12 @@ const ProductDetailPage = () => {
                 >
                   Edit
                 </Link>
+                <Link
+                  href={`/products/variants/${id}`}
+                  className="px-4  py-2 bg-yellow-200  dark:bg-bg-yeloow-200  text-white dark:text-black rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200"
+                >
+                  variants
+                </Link>
                 <button
                   type="button"
                   disabled={true}

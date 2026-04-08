@@ -5,6 +5,7 @@ import userReducer from "./slices/userSlice";
 import vendorReducer from "./slices/vendorSlice";
 import generalReducer from "./slices/genralSlice";
 import productReducer from "./slices/productSlice";
+import dashboardStatsReducer from "./slices/dashboardStats";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     vendor: vendorReducer,
     general: generalReducer,
     product: productReducer,
+    dashboardStats: dashboardStatsReducer,
   },
 });
 

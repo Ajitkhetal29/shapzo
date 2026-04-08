@@ -3,9 +3,11 @@ import Category from "../models/category.js";
 import Subcategory from "../models/subcategory.js";
 import Vendor from "../models/vendor.js";
 import { uploadImages } from "../utils/cloudinary.js";
+import Variant from "../models/variant.js";
 
 const createProduct = async (req, res) => {
-  const { name, description, categoryId, subcategoryId, vendorId, slug } = req.body;
+  const { name, description, categoryId, subcategoryId, vendorId, slug } =
+    req.body;
 
   try {
     if (!name || !categoryId || !vendorId) {
@@ -20,8 +22,6 @@ const createProduct = async (req, res) => {
         message: "Slug could not be generated from name",
       });
     }
-
-
 
     const existingCategory = await Category.findById(categoryId);
     const existingVendor = await Vendor.findById(vendorId);
@@ -77,13 +77,13 @@ const createProduct = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Product Added Successfully"
-    })
-
-
+      message: "Product Added Successfully",
+    });
   } catch (error) {
     console.error(error);
-    const isCloudinaryConfig = error?.message?.includes("api_key") || error?.message?.includes("Must supply");
+    const isCloudinaryConfig =
+      error?.message?.includes("api_key") ||
+      error?.message?.includes("Must supply");
     res.status(500).json({
       success: false,
       message: isCloudinaryConfig
@@ -91,13 +91,20 @@ const createProduct = async (req, res) => {
         : "Something went wrong while adding product.",
     });
   }
-
 };
 
 const getProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 20, categoryId, subcategoryId, vendorId } = req.query;
-    const skip = (Math.max(1, parseInt(page, 10)) - 1) * Math.min(100, Math.max(1, parseInt(limit, 10)));
+    const {
+      page = 1,
+      limit = 20,
+      categoryId,
+      subcategoryId,
+      vendorId,
+    } = req.query;
+    const skip =
+      (Math.max(1, parseInt(page, 10)) - 1) *
+      Math.min(100, Math.max(1, parseInt(limit, 10)));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
 
     const filter = {};
@@ -157,7 +164,6 @@ const deleteProduct = async (req, res) => {
   }
 };
 
-
 const getProductById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -173,7 +179,6 @@ const getProductById = async (req, res) => {
       .populate("category", "name slug")
       .populate("subcategory", "name slug")
       .populate("vendor", "name");
-
 
     return res.status(200).json({
       success: true,
@@ -191,7 +196,8 @@ const getProductById = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   const { id } = req.params;
-  const { name, description, categoryId, subcategoryId, vendorId, slug } = req.body;
+  const { name, description, categoryId, subcategoryId, vendorId, slug } =
+    req.body;
 
   try {
     const product = await Product.findById(id);
@@ -259,7 +265,10 @@ const updateProduct = async (req, res) => {
     // Keep existing images by indices (from body.keepImageIndices JSON array), then append new uploads
     let keepIndices = [];
     try {
-      if (typeof req.body.keepImageIndices === "string" && req.body.keepImageIndices) {
+      if (
+        typeof req.body.keepImageIndices === "string" &&
+        req.body.keepImageIndices
+      ) {
         keepIndices = JSON.parse(req.body.keepImageIndices);
       }
     } catch (_) {}
@@ -267,7 +276,9 @@ const updateProduct = async (req, res) => {
     const keptExisting =
       Array.isArray(keepIndices) && keepIndices.length > 0
         ? keepIndices
-            .filter((i) => Number.isInteger(i) && i >= 0 && i < existingList.length)
+            .filter(
+              (i) => Number.isInteger(i) && i >= 0 && i < existingList.length,
+            )
             .map((i) => existingList[i])
         : existingList;
     const newUploads = req.files?.length ? await uploadImages(req.files) : [];
@@ -287,7 +298,9 @@ const updateProduct = async (req, res) => {
         message: "Slug already in use by another product",
       });
     }
-    const isCloudinaryConfig = error?.message?.includes("api_key") || error?.message?.includes("Must supply");
+    const isCloudinaryConfig =
+      error?.message?.includes("api_key") ||
+      error?.message?.includes("Must supply");
     return res.status(500).json({
       success: false,
       message: isCloudinaryConfig
@@ -297,4 +310,206 @@ const updateProduct = async (req, res) => {
   }
 };
 
-export { createProduct, getProducts, deleteProduct, getProductById, updateProduct };
+const addVariant = async (req, res) => {
+  try {
+    console.log("BODY:", req.body);
+
+    const { productId, size, color, price, sku, stock } = req.body;
+
+    // 🔹 Basic validation
+    if (!productId || !size || !color || !price || !sku) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    // 🔹 Check product
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    // 🔹 Upload images
+    let imageList = [];
+    if (req.files?.length) {
+      imageList = await uploadImages(req.files);
+    }
+
+    // 🔹 Create variant
+    const newVariant = await Variant.create({
+      product: productId,
+      size,
+      color,
+      price,
+      sku,
+      stock : stock ?? 0,
+      images: imageList,
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Variant created successfully",
+      variant: newVariant,
+    });
+  } catch (error) {
+    console.error("ADD VARIANT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while adding variant",
+    });
+  }
+};
+
+const getProductvariants = async (req, res) => {
+  console.log("GET VARIANTS CALLED WITH PARAMS:", req.params);
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "productId is required",
+      });
+    }
+
+    console.log("Fetching variants for productId:", productId);
+
+    const variants = await Variant.find({ product: productId }).lean();
+    return res.status(200).json({
+      success: true,
+      message: "Variants fetched successfully",
+      variants,
+    });
+  } catch (error) {
+    console.error("GET VARIANTS ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while fetching variants",
+    });
+  }
+};
+
+const updateVariant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { size, color, price, sku, existingImages, stock } = req.body;
+
+    // 🔹 Parse existing images safely
+    let parsedExistingImages = [];
+    if (existingImages) {
+      parsedExistingImages = JSON.parse(existingImages);
+    }
+
+    // 🔹 Upload new images
+    let newImageList = [];
+    if (req.files?.length) {
+      newImageList = await uploadImages(req.files);
+    }
+
+    const variant = await Variant.findById(id);
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+
+    // 🔥 STEP 1: FIND REMOVED IMAGES
+    const removedImages = variant.images.filter(
+      (img) => !parsedExistingImages.some((e) => e.url === img.url),
+    );
+
+    // 🔥 STEP 2: DELETE FROM CLOUD (IMPORTANT)
+    for (const img of removedImages) {
+      await deleteImage(img.public_id); // implement this
+    }
+
+    // 🔥 STEP 3: FINAL IMAGE LIST
+    const finalImages = [...parsedExistingImages, ...newImageList];
+
+    // 🔹 Update fields
+    variant.size = size;
+    variant.color = color;
+    variant.price = price;
+    variant.sku = sku;
+    variant.stock = stock;
+    variant.images = finalImages;
+
+    await variant.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant updated successfully",
+    });
+  } catch (error) {
+    console.error("UPDATE VARIANT ERROR:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong while updating variant",
+    });
+  }
+};
+
+const getVariantById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const variant = await Variant.findById(id);
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant fetched successfully",
+      variant,
+    });
+  } catch (error) {
+    console.error("Get variant by id error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const deleteVariant = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const variant = await Variant.findByIdAndDelete(id);
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Variant deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete variant error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+export {
+  createProduct,
+  getProducts,
+  deleteProduct,
+  getProductById,
+  updateProduct,
+  addVariant,
+  getProductvariants,
+  updateVariant,
+  getVariantById,
+  deleteVariant,
+};

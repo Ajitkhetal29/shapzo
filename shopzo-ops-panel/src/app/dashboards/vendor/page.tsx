@@ -7,7 +7,7 @@ import { RootState } from "@/store";
 
 const vendorDashboardPage = () => {
   const users = useSelector((state: RootState) => state.user.users);
-  const vendorTeamMembers = users.filter(user => user.department === "vendor");
+  const vendorTeamMembers = users.filter(user => user.department.name === "vendor");
 
   const stats = [
     { name: "Total Products", value: "0", icon: "🛍️", color: "bg-blue-500" },

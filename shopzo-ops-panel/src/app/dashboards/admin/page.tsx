@@ -4,22 +4,38 @@ import React from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import axios from "axios";
+import { API_ENDPOINTS } from "@/lib/api";
+import { setDashboardStats } from "@/store/slices/dashboardStats";
+import { useDispatch } from "react-redux";
 
 const AdminDashboardPage = () => {
-  const users = useSelector((state: RootState) => state.user.users);
-  const warehouses = useSelector((state: RootState) => state.warehouse.warehouses);
-  const vendors = useSelector((state: RootState) => state.vendor.vendors);
-  const departments = useSelector((state: RootState) => state.general.departments);
-  const roles = useSelector((state: RootState) => state.general.roles);
+
+  const dispatch = useDispatch();
+const dashboardStats = useSelector((state: RootState) => state.dashboardStats);
+
+
+ const fetchDashboardData = async () => {
+
+  const result =await axios.get(API_ENDPOINTS.GET_DASHBOARD_STATS, {withCredentials : true})
+  if (result.data.success){
+    dispatch(setDashboardStats(result.data.stats));
+  }
+ }
+
+ if (!dashboardStats || dashboardStats.totalUsers === 0) {
+  fetchDashboardData();
+ }
+
 
   const stats = [
-    { name: "Total Users", value: users.length.toString(), icon: "👥", href: "/users", color: "bg-blue-500" },
-    { name: "Warehouses", value: warehouses.length.toString(), icon: "🏭", href: "/warehouse", color: "bg-green-500" },
-    { name: "Vendors", value: vendors.length.toString(), icon: "🏢", href: "/vendor", color: "bg-indigo-500" },
-    { name: "Departments", value: departments.length.toString(), icon: "🏛️", href: "/genral", color: "bg-teal-500" },
-    { name: "Roles", value: roles.length.toString(), icon: "👔", href: "/genral", color: "bg-pink-500" },
-    { name: "Orders", value: "0", icon: "📦", href: "/orders", color: "bg-purple-500" },
-    { name: "Products", value: "0", icon: "🛍️", href: "/products", color: "bg-orange-500" },
+    { name: "Total Users", value: dashboardStats.totalUsers?.toString() || "0", icon: "👥", href: "/users", color: "bg-blue-500" },
+    { name: "Warehouses", value: dashboardStats.totalWarehouses?.toString() || "0", icon: "🏭", href: "/warehouse", color: "bg-green-500" },
+    { name: "Vendors", value: dashboardStats.totalVendors?.toString() || "0", icon: "🏢", href: "/vendor", color: "bg-indigo-500" },
+    { name: "Departments", value: dashboardStats.totalDepartments?.toString() || "0", icon: "🏛️", href: "/genral", color: "bg-teal-500" },
+    { name: "Roles", value: dashboardStats.totalRoles?.toString() || "0", icon: "👔", href: "/genral", color: "bg-pink-500" },
+    { name: "Orders", value: 0, icon: "📦", href: "/orders", color: "bg-purple-500" },
+    { name: "Products", value: dashboardStats.totalProducts?.toString() || "0", icon: "🛍️", href: "/products", color: "bg-orange-500" },
   ];
 
   const quickActions = [

@@ -3,6 +3,7 @@ import { store } from "@/store";
 import { setUser } from "@/store/slices/authSlice";
 import { setWarehouses } from "@/store/slices/warehouseSlice";
 import { setUsers } from "@/store/slices/userSlice";
+import { setDashboardStats } from "@/store/slices/dashboardStats";
 import { setVendors } from "@/store/slices/vendorSlice";
 import { API_ENDPOINTS } from "@/lib/api";
 import { setDepartments, setRoles } from "@/store/slices/genralSlice";
@@ -117,6 +118,21 @@ export const initializeApp = async (): Promise<AppInitResult> => {
       );
     }
 
+    if (!state.dashboardStats || state.dashboardStats.totalUsers === 0) {
+    promises.push(
+      axios
+        .get(API_ENDPOINTS.GET_DASHBOARD_STATS, { withCredentials: true })
+        .then((res) => {
+          if (res.data.success && res.data.stats) {
+            dispatch(setDashboardStats(res.data.stats));
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching dashboard stats:", err);
+        })
+    );
+  }
+    
   
     // Wait for all fetches to complete
     await Promise.allSettled(promises);

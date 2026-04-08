@@ -17,8 +17,8 @@ type User = {
   id?: string; // For backward compatibility
   name: string;
   email: string;
-  department: Department | string; // Can be object or string for backward compatibility
-  role: Role | string; // Can be object or string for backward compatibility
+  department: Department ; // Can be object or string for backward compatibility
+  role: Role ; // Can be object or string for backward compatibility
   isActive: boolean;
   createdAt: Date;
 };

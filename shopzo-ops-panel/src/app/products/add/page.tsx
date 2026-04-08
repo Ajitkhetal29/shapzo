@@ -63,6 +63,12 @@ const AddProductPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const generateUniqueSlug = (name: string) => {
+  const base = slugFromName(name);
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `${base}-${random}`;
+};
+
   // Initial image selection
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -147,14 +153,14 @@ const AddProductPage = () => {
                 name="name"
                 required
                 value={formData.name}
-                onChange={(e) => {
-                  const name = e.target.value;
-                  setFormData((prev) => ({
-                    ...prev,
-                    name,
-                    slug: slugFromName(name),
-                  }));
-                }}
+               onChange={(e) => {
+  const name = e.target.value;
+  setFormData((prev) => ({
+    ...prev,
+    name,
+    slug: generateUniqueSlug(name),
+  }));
+}}
                 className="w-full px-4 py-2.5 text-gray-900 dark:text-white bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white focus:border-black dark:focus:border-white transition-colors text-sm"
                 placeholder="Enter product name"
               />
