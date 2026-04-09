@@ -2,18 +2,37 @@ import Product from "../models/product.js";
 import Category from "../models/category.js";
 import Subcategory from "../models/subcategory.js";
 import Vendor from "../models/vendor.js";
-import { uploadImages, deleteImage } from "../utils/cloudinary.js";
 import Variant from "../models/variant.js";
+import { uploadImages, deleteImage } from "../utils/cloudinary.js";
 
-const createProduct = async (req, res) => {
-  const { name, description, categoryId, subcategoryId, vendorId, slug } =
-    req.body;
+const vendorIdFromReq = (req) => req.vendor?.id;
+
+/** Treat missing / other vendor as 404 so we do not leak resource existence */
+async function findProductOwnedBy(productId, vendorId) {
+  if (!productId || !vendorId) return null;
+  const product = await Product.findById(productId);
+  if (!product || String(product.vendor) !== String(vendorId)) return null;
+  return product;
+}
+
+const vendorCreateProduct = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { name, description, categoryId, subcategoryId, slug } = req.body;
 
   try {
-    if (!name || !categoryId || !vendorId) {
+    if (!vendorId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const existingVendor = await Vendor.findById(vendorId);
+    if (!existingVendor) {
+      return res.status(401).json({ success: false, message: "Vendor not found" });
+    }
+
+    if (!name || !categoryId) {
       return res.status(400).json({
         success: false,
-        message: "Name, category and vendor are required",
+        message: "Name and category are required",
       });
     }
     if (!slug) {
@@ -24,30 +43,15 @@ const createProduct = async (req, res) => {
     }
 
     const existingCategory = await Category.findById(categoryId);
-    const existingVendor = await Vendor.findById(vendorId);
-
     if (!existingCategory) {
-      return res.status(400).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
-
-    if (!existingVendor) {
-      return res.status(400).json({
-        success: false,
-        message: "vendor not found",
-      });
+      return res.status(400).json({ success: false, message: "Category not found" });
     }
 
     let subcategory = null;
     if (subcategoryId) {
       const existingSub = await Subcategory.findById(subcategoryId);
       if (!existingSub) {
-        return res.status(400).json({
-          success: false,
-          message: "Subcategory not found",
-        });
+        return res.status(400).json({ success: false, message: "Subcategory not found" });
       }
       if (String(existingSub.category) !== String(categoryId)) {
         return res.status(400).json({
@@ -77,10 +81,10 @@ const createProduct = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: "Product Added Successfully",
+      message: "Product added successfully",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Vendor create product error:", error);
     const isCloudinaryConfig =
       error?.message?.includes("api_key") ||
       error?.message?.includes("Must supply");
@@ -93,24 +97,27 @@ const createProduct = async (req, res) => {
   }
 };
 
-const getProducts = async (req, res) => {
+const vendorListProducts = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
   try {
     const {
       page = 1,
       limit = 20,
       categoryId,
       subcategoryId,
-      vendorId,
     } = req.query;
     const skip =
       (Math.max(1, parseInt(page, 10)) - 1) *
       Math.min(100, Math.max(1, parseInt(limit, 10)));
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10)));
 
-    const filter = {};
+    const filter = { vendor: vendorId };
     if (categoryId) filter.category = categoryId;
     if (subcategoryId) filter.subcategory = subcategoryId;
-    if (vendorId) filter.vendor = vendorId;
 
     const [products, totalCount] = await Promise.all([
       Product.find(filter)
@@ -133,7 +140,7 @@ const getProducts = async (req, res) => {
       limit: limitNum,
     });
   } catch (error) {
-    console.error("Get products error:", error);
+    console.error("Vendor list products error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -141,34 +148,16 @@ const getProducts = async (req, res) => {
   }
 };
 
-const deleteProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await Product.findByIdAndDelete(id);
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "Product not found",
-      });
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Product deleted successfully",
-    });
-  } catch (error) {
-    console.error("Delete product error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+const vendorGetProductById = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { id } = req.params;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
   }
-};
 
-const getProductById = async (req, res) => {
   try {
-    const { id } = req.params;
-    const product = await Product.findById(id);
-    if (!product) {
+    const owned = await findProductOwnedBy(id, vendorId);
+    if (!owned) {
       return res.status(404).json({
         success: false,
         message: "Product not found",
@@ -186,7 +175,7 @@ const getProductById = async (req, res) => {
       product: productFound,
     });
   } catch (error) {
-    console.error("Get product by id error:", error);
+    console.error("Vendor get product error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -194,13 +183,47 @@ const getProductById = async (req, res) => {
   }
 };
 
-const updateProduct = async (req, res) => {
+const vendorDeleteProduct = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
   const { id } = req.params;
-  const { name, description, categoryId, subcategoryId, vendorId, slug } =
-    req.body;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
 
   try {
-    const product = await Product.findById(id);
+    const owned = await findProductOwnedBy(id, vendorId);
+    if (!owned) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    await Product.findByIdAndDelete(id);
+    return res.status(200).json({
+      success: true,
+      message: "Product deleted successfully",
+    });
+  } catch (error) {
+    console.error("Vendor delete product error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const vendorUpdateProduct = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { id } = req.params;
+  const { name, description, categoryId, subcategoryId, slug } = req.body;
+
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  try {
+    const product = await findProductOwnedBy(id, vendorId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -208,33 +231,16 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    if (!name || !categoryId || !vendorId) {
+    if (!name || !categoryId || !slug) {
       return res.status(400).json({
         success: false,
-        message: "Name, category and vendor are required",
-      });
-    }
-    if (!slug) {
-      return res.status(400).json({
-        success: false,
-        message: "Slug is required",
+        message: "Name, category and slug are required",
       });
     }
 
     const existingCategory = await Category.findById(categoryId);
-    const existingVendor = await Vendor.findById(vendorId);
-
     if (!existingCategory) {
-      return res.status(400).json({
-        success: false,
-        message: "Category not found",
-      });
-    }
-    if (!existingVendor) {
-      return res.status(400).json({
-        success: false,
-        message: "Vendor not found",
-      });
+      return res.status(400).json({ success: false, message: "Category not found" });
     }
 
     let subcategory = null;
@@ -262,7 +268,6 @@ const updateProduct = async (req, res) => {
     product.subcategory = subcategory ?? undefined;
     product.vendor = vendorId;
 
-    // Keep existing images by indices (from body.keepImageIndices JSON array), then append new uploads
     let keepIndices = [];
     try {
       if (
@@ -291,7 +296,7 @@ const updateProduct = async (req, res) => {
       message: "Product updated successfully",
     });
   } catch (error) {
-    console.error("Update product error:", error);
+    console.error("Vendor update product error:", error);
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
@@ -310,13 +315,15 @@ const updateProduct = async (req, res) => {
   }
 };
 
-const addVariant = async (req, res) => {
-  try {
-    console.log("BODY:", req.body);
+const vendorAddVariant = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
 
+  try {
     const { productId, size, color, price, sku } = req.body;
 
-    // 🔹 Basic validation
     if (!productId || !size || !color || !price || !sku) {
       return res.status(400).json({
         success: false,
@@ -324,8 +331,7 @@ const addVariant = async (req, res) => {
       });
     }
 
-    // 🔹 Check product
-    const product = await Product.findById(productId);
+    const product = await findProductOwnedBy(productId, vendorId);
     if (!product) {
       return res.status(404).json({
         success: false,
@@ -333,13 +339,11 @@ const addVariant = async (req, res) => {
       });
     }
 
-    // 🔹 Upload images
     let imageList = [];
     if (req.files?.length) {
       imageList = await uploadImages(req.files);
     }
 
-    // 🔹 Create variant
     const newVariant = await Variant.create({
       product: productId,
       size,
@@ -355,7 +359,7 @@ const addVariant = async (req, res) => {
       variant: newVariant,
     });
   } catch (error) {
-    console.error("ADD VARIANT ERROR:", error);
+    console.error("Vendor add variant error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong while adding variant",
@@ -363,10 +367,14 @@ const addVariant = async (req, res) => {
   }
 };
 
-const getProductvariants = async (req, res) => {
-  console.log("GET VARIANTS CALLED WITH PARAMS:", req.params);
+const vendorGetProductVariants = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { productId } = req.params;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
   try {
-    const { productId } = req.params;
     if (!productId) {
       return res.status(400).json({
         success: false,
@@ -374,7 +382,13 @@ const getProductvariants = async (req, res) => {
       });
     }
 
-    console.log("Fetching variants for productId:", productId);
+    const owned = await findProductOwnedBy(productId, vendorId);
+    if (!owned) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
 
     const variants = await Variant.find({ product: productId }).lean();
     return res.status(200).json({
@@ -383,7 +397,7 @@ const getProductvariants = async (req, res) => {
       variants,
     });
   } catch (error) {
-    console.error("GET VARIANTS ERROR:", error);
+    console.error("Vendor get variants error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong while fetching variants",
@@ -391,18 +405,63 @@ const getProductvariants = async (req, res) => {
   }
 };
 
-const updateVariant = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { size, color, price, sku, existingImages } = req.body;
+const vendorGetVariantById = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { id } = req.params;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
 
-    // 🔹 Parse existing images safely
-    let parsedExistingImages = [];
-    if (existingImages) {
-      parsedExistingImages = JSON.parse(existingImages);
+  try {
+    const variant = await Variant.findById(id);
+    if (!variant) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
     }
 
-    // 🔹 Upload new images
+    const product = await findProductOwnedBy(variant.product, vendorId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Variant fetched successfully",
+      variant,
+    });
+  } catch (error) {
+    console.error("Vendor get variant error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const vendorUpdateVariant = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { id } = req.params;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
+  try {
+    const { size, color, price, sku, existingImages } = req.body;
+
+    let parsedExistingImages = [];
+    if (existingImages) {
+      try {
+        parsedExistingImages = JSON.parse(existingImages);
+      } catch (_) {
+        parsedExistingImages = [];
+      }
+    }
+
     let newImageList = [];
     if (req.files?.length) {
       newImageList = await uploadImages(req.files);
@@ -416,20 +475,24 @@ const updateVariant = async (req, res) => {
       });
     }
 
-    // 🔥 STEP 1: FIND REMOVED IMAGES
+    const product = await findProductOwnedBy(variant.product, vendorId);
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Variant not found",
+      });
+    }
+
     const removedImages = variant.images.filter(
       (img) => !parsedExistingImages.some((e) => e.url === img.url),
     );
 
-    // 🔥 STEP 2: DELETE FROM CLOUD (IMPORTANT)
     for (const img of removedImages) {
-      await deleteImage(img.public_id); // implement this
+      await deleteImage(img.public_id);
     }
 
-    // 🔥 STEP 3: FINAL IMAGE LIST
     const finalImages = [...parsedExistingImages, ...newImageList];
 
-    // 🔹 Update fields
     variant.size = size;
     variant.color = color;
     variant.price = price;
@@ -443,7 +506,7 @@ const updateVariant = async (req, res) => {
       message: "Variant updated successfully",
     });
   } catch (error) {
-    console.error("UPDATE VARIANT ERROR:", error);
+    console.error("Vendor update variant error:", error);
     return res.status(500).json({
       success: false,
       message: "Something went wrong while updating variant",
@@ -451,9 +514,14 @@ const updateVariant = async (req, res) => {
   }
 };
 
-const getVariantById = async (req, res) => {
+const vendorDeleteVariant = async (req, res) => {
+  const vendorId = vendorIdFromReq(req);
+  const { id } = req.params;
+  if (!vendorId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
+  }
+
   try {
-    const { id } = req.params;
     const variant = await Variant.findById(id);
     if (!variant) {
       return res.status(404).json({
@@ -462,36 +530,21 @@ const getVariantById = async (req, res) => {
       });
     }
 
-    return res.status(200).json({
-      success: true,
-      message: "Variant fetched successfully",
-      variant,
-    });
-  } catch (error) {
-    console.error("Get variant by id error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
-  }
-};
-
-const deleteVariant = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const variant = await Variant.findByIdAndDelete(id);
-    if (!variant) {
+    const product = await findProductOwnedBy(variant.product, vendorId);
+    if (!product) {
       return res.status(404).json({
         success: false,
         message: "Variant not found",
       });
     }
+
+    await Variant.findByIdAndDelete(id);
     return res.status(200).json({
       success: true,
       message: "Variant deleted successfully",
     });
   } catch (error) {
-    console.error("Delete variant error:", error);
+    console.error("Vendor delete variant error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -500,14 +553,14 @@ const deleteVariant = async (req, res) => {
 };
 
 export {
-  createProduct,
-  getProducts,
-  deleteProduct,
-  getProductById,
-  updateProduct,
-  addVariant,
-  getProductvariants,
-  updateVariant,
-  getVariantById,
-  deleteVariant,
+  vendorCreateProduct,
+  vendorListProducts,
+  vendorGetProductById,
+  vendorDeleteProduct,
+  vendorUpdateProduct,
+  vendorAddVariant,
+  vendorGetProductVariants,
+  vendorGetVariantById,
+  vendorUpdateVariant,
+  vendorDeleteVariant,
 };

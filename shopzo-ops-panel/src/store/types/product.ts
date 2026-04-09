@@ -19,11 +19,12 @@ export type Product = {
 
 export type ProductVariant = {
   _id: string;
-  productId: string;
+  /** Present when API populates or maps parent id */
+  productId?: string;
+  product?: string | { _id: string };
   price: number;
   color?: string;
-  size: string;
+  size?: string;
   sku: string;
-  stock: number;
-  images: { url: string; public_id: string }[];
+  images: { url: string; public_id?: string }[];
 };

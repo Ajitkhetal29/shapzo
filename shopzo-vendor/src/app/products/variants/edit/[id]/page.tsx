@@ -3,82 +3,82 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
-import { API_ENDPOINTS } from "@/lib/api";
+import { API_ENDPOINTS } from "@/app/lib/api";
+import { RootState } from "@/store";
 import { ProductVariant } from "@/store/types/product";
 import { toast } from "react-toastify";
 
 const MAX_IMAGES = 5;
 
 function productIdFromVariant(v: ProductVariant): string {
-  const raw = v.product ?? v.productId;
+  const raw = v.product;
   if (!raw) return "";
   if (typeof raw === "string") return raw;
-  return raw._id ?? "";
+  return (raw as { _id?: string })._id ?? "";
 }
 
-const EditVariantPage = () => {
+export default function EditVariantPage() {
   const params = useParams();
   const router = useRouter();
+  const vendor = useSelector((state: RootState) => state.auth.vendor);
   const variantId = params.id as string;
 
   const [variant, setVariant] = useState<ProductVariant | null>(null);
   const [productId, setProductId] = useState("");
   const [productName, setProductName] = useState("");
-
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [existingImages, setExistingImages] = useState<{ url: string; public_id: string }[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
-
   const [form, setForm] = useState({
     size: "",
     color: "",
     price: "",
     sku: "",
   });
-
   const [baseSku, setBaseSku] = useState("");
 
   useEffect(() => {
+    if (!variantId || !vendor?._id) return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
-
         const res = await axios.get(`${API_ENDPOINTS.GET_VARIANT_BY_ID}/${variantId}`, {
           withCredentials: true,
         });
-
-        if (!res.data.success) throw new Error();
-
+        if (!res.data?.success || !res.data?.variant) throw new Error();
         const v = res.data.variant as ProductVariant;
-
-        setVariant(v);
-        setExistingImages(
-          (v.images || []).map((img) => ({ url: img.url, public_id: img.public_id ?? "" })),
-        );
-
-        const parts = (v.sku || "").split("-");
-        const base = parts.length > 3 ? parts.slice(0, -3).join("-") : v.sku || "";
-        setBaseSku(base);
-
         const pid = productIdFromVariant(v);
-        setProductId(pid);
-
-        if (pid) {
-          try {
-            const prodRes = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_BY_ID}/${pid}`, {
-              withCredentials: true,
-            });
-            if (prodRes.data?.success && prodRes.data?.product) {
-              setProductName(prodRes.data.product.name ?? "");
-            }
-          } catch {
-            /* product label optional */
-          }
+        if (!pid) {
+          setError("Invalid variant");
+          return;
         }
+
+        const prodRes = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_BY_ID}/${pid}`, {
+          withCredentials: true,
+        });
+        if (!prodRes.data?.success || !prodRes.data?.product) {
+          setError("Product not found");
+          return;
+        }
+        const p = prodRes.data.product;
+        if (String(p.vendor?._id ?? p.vendor) !== String(vendor._id)) {
+          setError("You cannot edit this variant");
+          return;
+        }
+
+        setProductId(pid);
+        setProductName(p.name ?? "");
+        setVariant(v);
+        setExistingImages((v.images || []).map((img) => ({ url: img.url, public_id: img.public_id ?? "" })));
+
+        const parts = v.sku.split("-");
+        const base = parts.length > 3 ? parts.slice(0, -3).join("-") : v.sku;
+        setBaseSku(base);
 
         setForm({
           size: v.size || "",
@@ -87,14 +87,14 @@ const EditVariantPage = () => {
           sku: v.sku || "",
         });
       } catch {
-        setError("Failed to fetch variant");
+        setError("Failed to load variant");
       } finally {
         setLoading(false);
       }
     };
 
-    if (variantId) fetchData();
-  }, [variantId]);
+    fetchData();
+  }, [variantId, vendor?._id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -114,88 +114,66 @@ const EditVariantPage = () => {
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const files = Array.from(e.target.files);
-
     const total = existingImages.length + images.length + files.length;
-
     if (total > MAX_IMAGES) {
-      toast.error(`Max ${MAX_IMAGES} images allowed`);
+      toast.error(`Max ${MAX_IMAGES} images`);
       return;
     }
-
     const updatedImages = [...images, ...files];
     setImages(updatedImages);
-
-    const previews = updatedImages.map((file) => URL.createObjectURL(file));
-    setPreview(previews);
-    e.target.value = "";
+    setPreview(updatedImages.map((file) => URL.createObjectURL(file)));
   };
 
   const handleRemoveNewImage = (index: number) => {
-    const updatedImages = images.filter((_, i) => i !== index);
-    const updatedPreview = preview.filter((_, i) => i !== index);
-
-    setImages(updatedImages);
-    setPreview(updatedPreview);
+    setImages(images.filter((_, i) => i !== index));
+    setPreview(preview.filter((_, i) => i !== index));
   };
 
   const handleRemoveExistingImage = (index: number) => {
-    const updated = existingImages.filter((_, i) => i !== index);
-    setExistingImages(updated);
+    setExistingImages(existingImages.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     try {
       const formData = new FormData();
-
       formData.append("size", form.size);
       formData.append("color", form.color);
       formData.append("price", form.price);
       formData.append("sku", form.sku);
-
       formData.append("existingImages", JSON.stringify(existingImages));
-
       images.forEach((file) => formData.append("images", file));
 
       const res = await axios.put(`${API_ENDPOINTS.UPDATE_VARIANT}/${variantId}`, formData, {
         withCredentials: true,
       });
-
       if (!res.data.success) throw new Error(res.data.message);
-
-      toast.success("Variant updated successfully");
-      if (productId) {
-        router.push(`/products/variants/${productId}`);
-      } else {
-        router.back();
-      }
+      toast.success("Variant updated");
+      router.push(`/products/variants/${productId}`);
     } catch (err: unknown) {
-      setError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          (err instanceof Error ? err.message : null) ||
-          "Failed to update variant",
-      );
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg || "Failed to update variant");
     }
   };
 
-  if (loading) {
+  if (!vendor?._id) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <p className="text-gray-600">Sign in to continue.</p>
       </div>
     );
   }
+
+  if (loading) return <p className="p-6">Loading...</p>;
   if (error && !variant) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6 max-w-xl mx-auto">
-        <Link href="/products" className="text-sm text-gray-600 dark:text-gray-400 hover:underline mb-4 inline-block">
+      <div className="p-6 max-w-xl mx-auto">
+        <Link href="/products" className="text-sm hover:underline mb-4 inline-block">
           ← Products
         </Link>
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
@@ -203,44 +181,26 @@ const EditVariantPage = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-4 min-h-screen bg-gray-50 dark:bg-slate-900">
-      {productId ? (
-        <Link
-          href={`/products/variants/${productId}`}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        >
-          ← Variants{productName ? ` · ${productName}` : ""}
-        </Link>
-      ) : (
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
-        >
-          ← Back
-        </button>
-      )}
-      <h1 className="text-xl font-bold text-gray-900 dark:text-white">Edit Variant</h1>
-
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700"
+      <Link
+        href={`/products/variants/${productId}`}
+        className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
       >
+        ← Variants · {productName}
+      </Link>
+      <h1 className="text-xl font-bold text-gray-900 dark:text-white">Edit variant</h1>
+
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">SKU</label>
-          <input
-            value={form.sku}
-            disabled
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white"
-          />
+          <input value={form.sku} disabled className="w-full border dark:border-slate-600 p-2 rounded bg-gray-100 dark:bg-slate-700" />
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Size</label>
           <select
             name="size"
             value={form.size}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+            className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800"
           >
             <option value="">Select</option>
             <option value="S">S</option>
@@ -249,17 +209,10 @@ const EditVariantPage = () => {
             <option value="XL">XL</option>
           </select>
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Color</label>
-          <input
-            name="color"
-            value={form.color}
-            onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
-          />
+          <input name="color" value={form.color} onChange={handleChange} className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800" />
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Price</label>
           <input
@@ -267,12 +220,11 @@ const EditVariantPage = () => {
             name="price"
             value={form.price}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+            className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800"
           />
         </div>
-
         <div>
-          <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Existing Images</label>
+          <label className="block text-sm mb-1">Existing images</label>
           <div className="flex flex-wrap gap-2">
             {existingImages.map((img, index) => (
               <div key={index} className="relative w-24">
@@ -289,31 +241,20 @@ const EditVariantPage = () => {
             ))}
           </div>
         </div>
-
         <div>
-          <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Add Images</label>
-
+          <label className="block text-sm mb-1">Add images</label>
           {existingImages.length + images.length < MAX_IMAGES && (
-            <input
-              type="file"
-              multiple
-              onChange={handleImages}
-              className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800"
-            />
+            <input type="file" multiple onChange={handleImages} className="w-full border p-2 rounded" />
           )}
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {existingImages.length + images.length} / {MAX_IMAGES}
-          </p>
+          <p className="text-sm text-gray-500">{existingImages.length + images.length} / {MAX_IMAGES}</p>
         </div>
-
         <div className="flex flex-wrap gap-2">
           {preview.map((src, index) => (
             <div key={index} className="relative w-24">
               <button
                 type="button"
                 onClick={() => handleRemoveNewImage(index)}
-                className="absolute top-1 right-1 bg-black text-white text-xs px-1 rounded z-10"
+                className="absolute top-1 right-1 bg-black text-white text-xs px-1 rounded"
               >
                 ✕
               </button>
@@ -322,18 +263,11 @@ const EditVariantPage = () => {
             </div>
           ))}
         </div>
-
-        {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200"
-        >
-          Update Variant
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+        <button type="submit" className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg">
+          Update variant
         </button>
       </form>
     </div>
   );
-};
-
-export default EditVariantPage;
+}

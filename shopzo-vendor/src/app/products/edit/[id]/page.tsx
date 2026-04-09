@@ -118,7 +118,6 @@ export default function EditProductPage() {
       fd.append("categoryId", formData.category);
       if (formData.subcategory) fd.append("subcategoryId", formData.subcategory);
       fd.append("slug", formData.slug);
-      fd.append("vendorId", vendor._id);
       const keepIndices = existingImages.map((_, i) => i).filter((i) => !removedExistingIndices.has(i));
       fd.append("keepImageIndices", JSON.stringify(keepIndices));
       newImages.forEach((img) => fd.append("images", img));

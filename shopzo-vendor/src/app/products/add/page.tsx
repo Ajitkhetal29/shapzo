@@ -79,7 +79,6 @@ export default function AddProductPage() {
       fd.append("categoryId", formData.category);
       if (formData.subcategory) fd.append("subcategoryId", formData.subcategory);
       fd.append("slug", formData.slug);
-      fd.append("vendorId", vendor._id);
       images.forEach((img) => fd.append("images", img));
 
       const res = await axios.post(API_ENDPOINTS.CREATE_PRODUCT, fd, { withCredentials: true });

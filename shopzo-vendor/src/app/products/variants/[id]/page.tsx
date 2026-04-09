@@ -3,14 +3,17 @@
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
-import { API_ENDPOINTS } from "@/lib/api";
+import { API_ENDPOINTS } from "@/app/lib/api";
+import { RootState } from "@/store";
 import { ProductVariant } from "@/store/types/product";
 import { toast } from "react-toastify";
 
 export default function ProductVariantsPage() {
   const params = useParams();
   const router = useRouter();
+  const vendor = useSelector((state: RootState) => state.auth.vendor);
   const productId = params.id as string;
 
   const [variants, setVariants] = useState<ProductVariant[]>([]);
@@ -21,7 +24,7 @@ export default function ProductVariantsPage() {
   const [variantToDelete, setVariantToDelete] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!productId) return;
+    if (!productId || !vendor?._id) return;
     setLoading(true);
     setError("");
     try {
@@ -33,7 +36,13 @@ export default function ProductVariantsPage() {
         setVariants([]);
         return;
       }
-      setProductName(prodRes.data.product.name ?? "");
+      const p = prodRes.data.product;
+      if (String(p.vendor?._id ?? p.vendor) !== String(vendor._id)) {
+        setError("You cannot manage variants for this product");
+        setVariants([]);
+        return;
+      }
+      setProductName(p.name ?? "");
 
       const vRes = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_VARIANTS}/${productId}`, {
         withCredentials: true,
@@ -49,7 +58,7 @@ export default function ProductVariantsPage() {
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, vendor?._id]);
 
   useEffect(() => {
     load();
@@ -71,11 +80,19 @@ export default function ProductVariantsPage() {
     }
   };
 
+  if (!vendor?._id) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center p-4">
+        <p className="text-gray-600 dark:text-gray-400">Sign in to manage variants.</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4">
         <div className="max-w-3xl mx-auto">
-          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+          <p className="text-gray-500">Loading...</p>
         </div>
       </div>
     );
@@ -85,10 +102,7 @@ export default function ProductVariantsPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8 px-4">
         <div className="max-w-3xl mx-auto">
-          <Link
-            href="/products"
-            className="text-sm text-gray-600 dark:text-gray-400 hover:underline mb-4 inline-block"
-          >
+          <Link href="/products" className="text-sm text-gray-600 dark:text-gray-400 hover:underline mb-4 inline-block">
             ← Back to products
           </Link>
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-red-800 dark:text-red-200">
@@ -115,7 +129,7 @@ export default function ProductVariantsPage() {
           <button
             type="button"
             onClick={() => router.push(`/products/variants/add/${productId}`)}
-            className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm hover:bg-gray-800 dark:hover:bg-gray-200"
+            className="px-4 py-2 bg-black dark:bg-white text-white dark:text-black rounded-lg font-medium text-sm"
           >
             Add variant
           </button>
@@ -160,7 +174,7 @@ export default function ProductVariantsPage() {
                   <button
                     type="button"
                     onClick={() => router.push(`/products/variants/edit/${v._id}`)}
-                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg"
                   >
                     Edit
                   </button>
@@ -170,7 +184,7 @@ export default function ProductVariantsPage() {
                       setVariantToDelete(v._id);
                       setDeleteOpen(true);
                     }}
-                    className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 border border-red-300 dark:border-red-800 rounded-lg"
                   >
                     Delete
                   </button>
@@ -192,7 +206,7 @@ export default function ProductVariantsPage() {
           aria-modal="true"
         >
           <div
-            className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm w-full border border-gray-200 dark:border-slate-700 shadow-xl"
+            className="bg-white dark:bg-slate-800 rounded-xl p-6 max-w-sm w-full border border-gray-200 dark:border-slate-700"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Delete variant?</h2>
@@ -200,7 +214,7 @@ export default function ProductVariantsPage() {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-slate-700"
+                className="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-slate-600"
                 onClick={() => {
                   setDeleteOpen(false);
                   setVariantToDelete(null);
@@ -210,7 +224,7 @@ export default function ProductVariantsPage() {
               </button>
               <button
                 type="button"
-                className="px-3 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
+                className="px-3 py-2 text-sm rounded-lg bg-red-600 text-white"
                 onClick={() => {
                   if (variantToDelete) deleteVariant(variantToDelete);
                   setDeleteOpen(false);

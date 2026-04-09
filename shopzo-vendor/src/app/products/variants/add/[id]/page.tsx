@@ -3,44 +3,51 @@
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import axios from "axios";
-import { API_ENDPOINTS } from "@/lib/api";
+import { API_ENDPOINTS } from "@/app/lib/api";
+import { RootState } from "@/store";
 import { Product } from "@/store/types/product";
 import { toast } from "react-toastify";
 
 const MAX_IMAGES = 5;
 
-const AddVariantPage = () => {
+export default function AddVariantPage() {
   const router = useRouter();
   const params = useParams();
+  const vendor = useSelector((state: RootState) => state.auth.vendor);
   const id = params?.id as string;
 
   const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [images, setImages] = useState<File[]>([]);
   const [preview, setPreview] = useState<string[]>([]);
-
   const [variant, setVariant] = useState({
     size: "",
     color: "",
     price: "",
     sku: "",
   });
-
   const [skuSeed] = useState(() => Math.floor(1000 + Math.random() * 9000));
 
   useEffect(() => {
+    if (!id || !vendor?._id) return;
+
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_BY_ID}/${id}`, {
-          withCredentials: true,
-        });
-
-        if (!res.data.success) throw new Error();
-        setProduct(res.data.product);
+        const res = await axios.get(`${API_ENDPOINTS.GET_PRODUCT_BY_ID}/${id}`, { withCredentials: true });
+        if (!res.data.success || !res.data.product) {
+          setError("Product not found");
+          return;
+        }
+        const p = res.data.product;
+        if (String(p.vendor?._id ?? p.vendor) !== String(vendor._id)) {
+          setError("You cannot add variants to this product");
+          return;
+        }
+        setProduct(p);
       } catch {
         setError("Failed to load product");
       } finally {
@@ -48,16 +55,14 @@ const AddVariantPage = () => {
       }
     };
 
-    if (id) fetchProduct();
-  }, [id]);
+    fetchProduct();
+  }, [id, vendor?._id]);
 
   useEffect(() => {
     if (!product) return;
-
     const base = product.name.replace(/\s+/g, "-").toUpperCase();
     const color = variant.color || "X";
     const size = variant.size || "X";
-
     setVariant((prev) => ({
       ...prev,
       sku: `${base}-${color.toUpperCase()}-${size.toUpperCase()}-${skuSeed}`,
@@ -70,30 +75,20 @@ const AddVariantPage = () => {
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const files = Array.from(e.target.files);
-
     const total = [...images, ...files].slice(0, MAX_IMAGES);
-
     setImages(total);
-
-    const previews = total.map((file) => URL.createObjectURL(file));
-    setPreview(previews);
-    e.target.value = "";
+    setPreview(total.map((file) => URL.createObjectURL(file)));
   };
 
   const handleRemoveImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    const newPreviews = preview.filter((_, i) => i !== index);
-
-    setImages(newImages);
-    setPreview(newPreviews);
+    setImages(images.filter((_, i) => i !== index));
+    setPreview(preview.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     try {
       const formData = new FormData();
       formData.append("productId", id);
@@ -103,36 +98,32 @@ const AddVariantPage = () => {
       formData.append("sku", variant.sku);
       images.forEach((file) => formData.append("images", file));
 
-      const res = await axios.post(API_ENDPOINTS.CREATE_VARIANT, formData, {
-        withCredentials: true,
-      });
-
+      const res = await axios.post(API_ENDPOINTS.CREATE_VARIANT, formData, { withCredentials: true });
       if (!res.data.success) throw new Error(res.data.message || "Failed to create variant");
-
-      toast.success("Variant created successfully", { autoClose: 3000 });
+      toast.success("Variant created");
       router.push(`/products/${id}`);
     } catch (err: unknown) {
-      setError(
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
-          "An error occurred",
-      );
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      setError(msg || (err instanceof Error ? err.message : "An error occurred"));
     }
   };
 
-  if (loading) {
+  if (!vendor?._id) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6">
-        <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <p className="text-gray-600">Sign in to continue.</p>
       </div>
     );
   }
+
+  if (loading) return <p className="p-6">Loading...</p>;
   if (error && !product) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 p-6 max-w-xl mx-auto">
-        <Link href="/products" className="text-sm text-gray-600 dark:text-gray-400 hover:underline mb-4 inline-block">
+      <div className="p-6 max-w-xl mx-auto">
+        <Link href="/products" className="text-sm text-gray-600 hover:underline mb-4 inline-block">
           ← Products
         </Link>
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
@@ -140,34 +131,23 @@ const AddVariantPage = () => {
 
   return (
     <div className="max-w-xl mx-auto p-6 space-y-4 min-h-screen bg-gray-50 dark:bg-slate-900">
-      <Link
-        href={`/products/${id}`}
-        className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-      >
+      <Link href={`/products/${id}`} className="text-sm text-gray-600 dark:text-gray-400 hover:underline">
         ← {product.name}
       </Link>
       <h1 className="text-xl font-bold text-gray-900 dark:text-white">Add variant · {product.name}</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700"
-      >
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-xl border border-gray-200 dark:border-slate-700">
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">SKU</label>
-          <input
-            value={variant.sku}
-            disabled
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white"
-          />
+          <input value={variant.sku} disabled className="w-full border dark:border-slate-600 p-2 rounded bg-gray-100 dark:bg-slate-700 text-gray-900 dark:text-white" />
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Size</label>
           <select
             name="size"
             value={variant.size}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+            className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
           >
             <option value="">Select</option>
             <option value="S">S</option>
@@ -176,18 +156,16 @@ const AddVariantPage = () => {
             <option value="XL">XL</option>
           </select>
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Color</label>
           <input
             name="color"
             value={variant.color}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+            className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
             placeholder="e.g. Red"
           />
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Price</label>
           <input
@@ -195,29 +173,18 @@ const AddVariantPage = () => {
             name="price"
             value={variant.price}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
+            className="w-full border dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800 text-gray-900 dark:text-white"
           />
         </div>
-
         <div>
           <label className="block text-sm mb-1 text-gray-700 dark:text-gray-300">Images</label>
-
           {images.length < MAX_IMAGES && (
-            <input
-              type="file"
-              multiple
-              onChange={handleImages}
-              className="w-full border border-gray-300 dark:border-slate-600 p-2 rounded bg-white dark:bg-slate-800"
-            />
+            <input type="file" multiple onChange={handleImages} className="w-full border dark:border-slate-600 p-2 rounded" />
           )}
-
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {images.length === 0
-              ? "Upload up to 5 images"
-              : `${images.length} / ${MAX_IMAGES} images selected`}
+          <p className="text-sm text-gray-500 mt-1">
+            {images.length} / {MAX_IMAGES} images
           </p>
         </div>
-
         <div className="flex flex-wrap gap-2">
           {preview.map((src, index) => (
             <div key={index} className="w-24 relative">
@@ -229,23 +196,19 @@ const AddVariantPage = () => {
                 ✕
               </button>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="Preview" className="w-full h-auto rounded" />
+              <img src={src} alt="" className="w-full h-auto rounded" />
             </div>
           ))}
         </div>
-
-        {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
-
+        {error && <p className="text-red-600 text-sm">{error}</p>}
         <button
           type="submit"
-          className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg font-medium disabled:opacity-50 hover:bg-gray-800 dark:hover:bg-gray-200"
+          className="bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-lg disabled:opacity-50"
           disabled={!variant.size || !variant.color || !variant.price}
         >
-          Create Variant
+          Create variant
         </button>
       </form>
     </div>
   );
-};
-
-export default AddVariantPage;
+}

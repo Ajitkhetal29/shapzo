@@ -25,6 +25,8 @@ import Vendor from "./models/vendor.js";
 import categoryRouter from "./routes/category.js";
 import subcategoryRouter from "./routes/subcategory.js";
 import productRouter from "./routes/product.js";
+import vendorProductRouter from "./routes/vendorProduct.js";
+import vendorInventoryRouter from "./routes/vendorInventory.js";
 import dashboardRouter from "./routes/dashboard.js";
 import { authMiddleware, vendorAuthMiddleware } from "./middleware/auth.js";
 
@@ -55,6 +57,8 @@ app.get("/api/vendor/me", vendorAuthMiddleware, async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
+app.use("/api/vendor/product", vendorProductRouter);
+app.use("/api/vendor/inventory", vendorInventoryRouter);
 app.use("/api/vendor", vendorRouter);
 app.use("/api/department", departmentRouter);
 app.use("/api/role", roleRouter);

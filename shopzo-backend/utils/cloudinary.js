@@ -26,4 +26,16 @@ const uploadImages = async (files) => {
   return Promise.all(files.map(uploadImage));
 };
 
-export { uploadImage, uploadImages };
+/**
+ * Remove an asset from Cloudinary (no-op if public_id is missing).
+ */
+const deleteImage = async (public_id) => {
+  if (!public_id) return;
+  try {
+    await cloudinary.uploader.destroy(public_id);
+  } catch (err) {
+    console.error("Cloudinary destroy error:", err?.message || err);
+  }
+};
+
+export { uploadImage, uploadImages, deleteImage };

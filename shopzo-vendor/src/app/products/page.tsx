@@ -41,7 +41,6 @@ export default function ProductsPage() {
         params: {
           page: pagination.page,
           limit: pagination.limit,
-          vendorId: vendor._id,
           categoryId: categoryId || undefined,
           subcategoryId: subcategoryId || undefined,
         },
@@ -164,7 +163,7 @@ export default function ProductsPage() {
                 <button
                   key={p._id}
                   type="button"
-                  onClick={() => router.push(`/products/edit/${p._id}`)}
+                  onClick={() => router.push(`/products/${p._id}`)}
                   className="group text-left bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 overflow-hidden hover:shadow-md transition-all"
                 >
                   <div className="aspect-square bg-gray-100 dark:bg-slate-700 relative overflow-hidden">
