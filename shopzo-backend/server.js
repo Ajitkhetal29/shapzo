@@ -26,8 +26,8 @@ import categoryRouter from "./routes/category.js";
 import subcategoryRouter from "./routes/subcategory.js";
 import productRouter from "./routes/product.js";
 import vendorProductRouter from "./routes/vendorProduct.js";
-import vendorInventoryRouter from "./routes/vendorInventory.js";
 import dashboardRouter from "./routes/dashboard.js";
+import inventoryRouter from "./routes/inventory.js";
 import { authMiddleware, vendorAuthMiddleware } from "./middleware/auth.js";
 
 const app = express();
@@ -58,7 +58,6 @@ app.get("/api/vendor/me", vendorAuthMiddleware, async (req, res) => {
   }
 });
 app.use("/api/vendor/product", vendorProductRouter);
-app.use("/api/vendor/inventory", vendorInventoryRouter);
 app.use("/api/vendor", vendorRouter);
 app.use("/api/department", departmentRouter);
 app.use("/api/role", roleRouter);
@@ -68,6 +67,7 @@ app.use("/api/category", categoryRouter);
 app.use("/api/subcategory", subcategoryRouter);
 app.use("/api/product", productRouter);
 app.use("/api/dashboard", dashboardRouter);
+app.use("/api/inventory", inventoryRouter);
 
 // this route is for home page and set user
 

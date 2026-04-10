@@ -9,6 +9,7 @@ import { API_ENDPOINTS } from "@/app/lib/api";
 import { RootState } from "@/store";
 import { ProductVariant } from "@/store/types/product";
 import { toast } from "react-toastify";
+import ManageInventory from "../compoenents/manageInventory";
 
 export default function ProductVariantsPage() {
   const params = useParams();
@@ -22,6 +23,7 @@ export default function ProductVariantsPage() {
   const [error, setError] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [variantToDelete, setVariantToDelete] = useState<string | null>(null);
+  const [stockVariant, setStockVariant] = useState<ProductVariant | null>(null);
 
   const load = useCallback(async () => {
     if (!productId || !vendor?._id) return;
@@ -170,7 +172,14 @@ export default function ProductVariantsPage() {
                   </p>
                   <p className="text-gray-500 dark:text-gray-400 font-mono text-xs break-all">SKU: {v.sku}</p>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex flex-wrap gap-2 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setStockVariant(v)}
+                    className="px-3 py-1.5 text-sm border border-gray-300 dark:border-slate-600 rounded-lg"
+                  >
+                    Stock
+                  </button>
                   <button
                     type="button"
                     onClick={() => router.push(`/products/variants/edit/${v._id}`)}
@@ -194,6 +203,15 @@ export default function ProductVariantsPage() {
           </ul>
         )}
       </div>
+
+      <ManageInventory
+        variant={stockVariant}
+        vendorId={vendor._id}
+        vendorName={vendor.name}
+        productName={productName}
+        open={!!stockVariant}
+        onClose={() => setStockVariant(null)}
+      />
 
       {deleteOpen && (
         <div

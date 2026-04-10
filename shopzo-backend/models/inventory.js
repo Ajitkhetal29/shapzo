@@ -39,26 +39,30 @@ const inventorySchema = new mongoose.Schema(
       enum: ["warehouse", "vendor"],
       required: true,
     },
+    available: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   { timestamps: true }
 );
 
 // Validation: exactly one of warehouse or vendor must be set
-inventorySchema.pre("validate", function (next) {
+// Mongoose 8+ validate hooks: use throw, not next() (next is not passed)
+inventorySchema.pre("validate", function () {
   const hasWarehouse = !!this.warehouse;
   const hasVendor = !!this.vendor;
 
   if (hasWarehouse && hasVendor) {
-    return next(new Error("Inventory cannot be in both warehouse and vendor location"));
+    throw new Error("Inventory cannot be in both warehouse and vendor location");
   }
 
   if (!hasWarehouse && !hasVendor) {
-    return next(new Error("Inventory must be in either warehouse or vendor location"));
+    throw new Error("Inventory must be in either warehouse or vendor location");
   }
 
-  // Set locationType automatically
   this.locationType = hasWarehouse ? "warehouse" : "vendor";
-  next();
 });
 
 // Indexes for fulfillment queries
@@ -66,10 +70,5 @@ inventorySchema.index({ variant: 1, locationType: 1 });
 inventorySchema.index({ warehouse: 1 });
 inventorySchema.index({ vendor: 1 });
 inventorySchema.index({ variant: 1, quantity: 1 }); // For available stock queries
-
-// Virtual for available quantity
-inventorySchema.virtual("available").get(function () {
-  return Math.max(0, this.quantity - this.reserved);
-});
 
 export default mongoose.model("Inventory", inventorySchema);
