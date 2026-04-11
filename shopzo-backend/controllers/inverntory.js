@@ -118,7 +118,7 @@ const getInventory = async (req, res) => {
 
         const [inventory, totalCount] = await Promise.all([
             Inventory.find(filter)
-                .populate("variant", "name sku image")
+                .populate("variant", "name sku images")
                 .populate("warehouse", "name location address")
                 .populate("vendor", "name location address")
                 .sort({ createdAt: -1 })
@@ -226,7 +226,7 @@ const getInventoryById = async (req, res) => {
             });
         }
         const inventory = await Inventory.findById(id)
-            .populate("variant", "name sku image")
+            .populate("variant", "name sku images")
             .populate("warehouse", "name location address")
             .populate("vendor", "name location address");
         if (!inventory) {

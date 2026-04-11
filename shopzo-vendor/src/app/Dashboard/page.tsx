@@ -13,6 +13,7 @@ const vendorDashboardPage = () => {
 
   const quickActions = [
     { name: "Manage Products", href: "/products", icon: "🛍️" },
+    { name: "Stock", href: "/inventory", icon: "🏭" },
     { name: "View Orders", href: "/orders", icon: "📋" },
     { name: "Team Management", href: "/Team", icon: "👥" },
     { name: "Sales History", href: "/History", icon: "📊" },
