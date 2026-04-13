@@ -1,175 +1,158 @@
 "use client";
 
-import React, { useState } from "react";
-import { API_ENDPOINTS } from "@/lib/api";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { API_ENDPOINTS } from "@/lib/api";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "@/store/slices/authSlice";
+import { useRouter, usePathname } from "next/navigation";
+import { RootState } from "@/store";
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const hasRedirected = useRef(false);
 
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [formData, setFormData] = useState({
-        email: "",
-        password: "",
-    });
-    const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
-        setError("");
-    };
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const [showPassword, setShowPassword] = useState(false);
 
-        e.preventDefault();
-        setError("");
-        setLoading(true);
-        try {
-            const response = await axios.post(API_ENDPOINTS.LOGIN, formData);
-            console.log(response.data);
-            if (response.status === 200) {
-                window.location.href = "/";
-            }
-            else {
-                setError("Invalid email or password");
-            }
-        } catch (error) {
-            console.error(error);
-            setError("An error occurred");
-        }
-        finally {
-            setLoading(false);
-        }
+  // Helper function to get department code
+  const getDepartmentCode = (department: any): string => {
+    if (!department) return "";
+    if (typeof department === "string") return department.toLowerCase();
+    if (department.code) return department.code.toLowerCase();
+    if (department.name) return department.name.toLowerCase();
+    return "";
+  };
 
+  // Redirect if already authenticated (only on login page)
+  useEffect(() => {
+    // Double check we're actually on login page before redirecting
+    if (pathname !== "/login" || hasRedirected.current) return;
+    
+    if (user) {
+      hasRedirected.current = true;
+      const deptCode = getDepartmentCode(user.department);
+      if (deptCode === "admin") router.push("/dashboards/admin");
+      else if (deptCode === "delivery") router.push("/dashboards/delivery");
+      else if (deptCode === "support") router.push("/dashboards/support");
+      else if (deptCode === "vendor") router.push("/dashboards/vendor");
     }
+  }, [user, router, pathname]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError("");
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
+    try {
+      const res = await axios.post(API_ENDPOINTS.LOGIN, formData, {
+        withCredentials: true,
+      });
 
-    return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <div className="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
-                {/* Form Header */}
-                <h1 className="text-3xl text-black font-bold text-center mb-2">
-                    Welcome Back
-                </h1>
-                <p className="text-gray-600 text-center mb-6">
-                    Sign in to your Shopzo Ops Panel account
-                </p>
+      if (!res.data.success) {
+        setError(res.data.message || "Login failed");
+        return;
+      }
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label
-                            htmlFor="email"
-                            className="block text-black text-sm font-medium mb-1"
-                        >
-                            Email
-                        </label>
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={handleChange}
-                            placeholder="you@example.com"
-                            className="w-full border text-black border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
-                        />
-                    </div>
+      const user = res.data.user;
 
-                    <div>
-                        <label
-                            htmlFor="password"
-                            className="block text-black text-sm font-medium mb-1"
-                        >
-                            Password
-                        </label>
-                        <div className="relative w-full">
-                            <input
-                                id="password"
-                                name="password"
-                                type={showPassword ? "text" : "password"}
-                                required
-                                value={formData.password}
-                                onChange={handleChange}
-                                placeholder="Enter your password"
-                                className="w-full text-black border border-gray-300 rounded-lg px-4 py-2.5 pr-12 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black transition"
-                            >
-                                {showPassword ? (
-                                    <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                                        />
-                                    </svg>
-                                ) : (
-                                    <svg
-                                        className="w-5 h-5"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                                        />
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth={2}
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                                        />
-                                    </svg>
-                                )}
-                            </button>
-                        </div>
-                    </div>
+      // ✅ Save user globally
+      dispatch(setUser(user));
 
-                    <div className="flex justify-end">
-                        <a
-                            href="#"
-                            className="text-sm text-gray-600 hover:text-black transition"
-                        >
-                            Forgot password?
-                        </a>
-                    </div>
+      // ✅ Role based navigation
+      const deptCode = getDepartmentCode(user.department);
+      if (deptCode === "admin") router.push("/dashboards/admin");
+      else if (deptCode === "delivery") router.push("/dashboards/delivery");
+      else if (deptCode === "support") router.push("/dashboards/support");
+      else if (deptCode === "vendor") router.push("/dashboards/vendor");
+      else setError("Invalid department. Contact admin.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                    {error && (
-                        <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p className="text-sm text-red-600">{error}</p>
-                        </div>
-                    )}
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-900 px-4 transition-colors">
+      <div className="w-full max-w-md bg-white dark:bg-slate-800 p-8 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700">
+        <h1 className="text-3xl text-black dark:text-white font-bold text-center mb-2">
+          Ops Panel Login
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 text-center mb-6">
+          Sign in to your Shopzo staff account
+        </p>
 
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full cursor-pointer bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {loading ? "Signing in..." : "Sign In"}
-                    </button>
-                </form>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-gray-200 mb-1">
+              Email
+            </label>
+            <input
+              name="email"
+              type="email"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full border text-black dark:text-white bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-black dark:focus:ring-white transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-black dark:text-gray-200 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={formData.password}
+                onChange={handleChange}
+                className="w-full border text-black dark:text-white bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 rounded-lg px-4 py-2.5 pr-10 focus:ring-2 focus:ring-black dark:focus:ring-white transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-2 text-gray-500 dark:text-gray-400"
+              >
+                {showPassword ? "🙈" : "👁"}
+              </button>
             </div>
-        </div>
-    );
+          </div>
 
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-sm p-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-black dark:bg-white text-white dark:text-black py-3 rounded-lg font-medium hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default LoginPage;
