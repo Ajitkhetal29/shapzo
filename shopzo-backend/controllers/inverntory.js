@@ -258,4 +258,6 @@ const getInventoryById = async (req, res) => {
 
 
 
+
+
 export { createInventory, getInventory, updateInventory, deleteInventory, getInventoryById };   

@@ -29,6 +29,7 @@ import vendorProductRouter from "./routes/vendorProduct.js";
 import dashboardRouter from "./routes/dashboard.js";
 import inventoryRouter from "./routes/inventory.js";
 import { authMiddleware, vendorAuthMiddleware } from "./middleware/auth.js";
+import inventoryTransferRouter from "./routes/transferInventory.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -68,6 +69,7 @@ app.use("/api/subcategory", subcategoryRouter);
 app.use("/api/product", productRouter);
 app.use("/api/dashboard", dashboardRouter);
 app.use("/api/inventory", inventoryRouter);
+app.use("/api/inventoryTransfer", inventoryTransferRouter)
 
 // this route is for home page and set user
 
