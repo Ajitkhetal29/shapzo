@@ -8,7 +8,7 @@ export type Role = {
     name: string;
     description?: string;
     level: number;
-   
+    department?: string | Department;
 };
 
 

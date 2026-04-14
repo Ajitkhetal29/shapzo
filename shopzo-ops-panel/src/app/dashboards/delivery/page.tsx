@@ -7,7 +7,10 @@ import { RootState } from "@/store";
 
 const deliveryDashboardPage = () => {
   const users = useSelector((state: RootState) => state.user.users);
-  const deliveryTeamMembers = users.filter(user => user.department.name === "delivery");
+  const deliveryTeamMembers = users.filter((user) => {
+    const departmentName = typeof user.department === "string" ? user.department : user.department?.name;
+    return departmentName?.toLowerCase() === "delivery";
+  });
 
   const stats = [
     { name: "Active Deliveries", value: "0", icon: "🚚", color: "bg-blue-500" },

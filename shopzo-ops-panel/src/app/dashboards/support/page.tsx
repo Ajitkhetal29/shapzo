@@ -15,7 +15,7 @@ const getDepartmentCode = (department: any): string => {
 
 const supportDashboardPage = () => {
   const users = useSelector((state: RootState) => state.user.users);
-  const supportTeamMembers = users.filter(user => getDepartmentCode(user.department.name) === "support");
+  const supportTeamMembers = users.filter((user) => getDepartmentCode(user.department) === "support");
 
   const stats = [
     { name: "Open Tickets", value: "0", icon: "🎫", color: "bg-red-500" },
